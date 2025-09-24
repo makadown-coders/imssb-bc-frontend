@@ -1,18 +1,34 @@
-import { Injectable } from '@angular/core';
+import { Injectable, signal } from '@angular/core';
+
+const K = (k: string) => `imssb.auth.${k}`;
 
 @Injectable({ providedIn: 'root' })
 export class TokenStore {
-  private accessToken?: string;
-  private refreshToken?: string;
+  private accessSig = signal<string | null>(this.read('access'));
+  private refreshSig = signal<string | null>(this.read('refresh'));
 
-  setTokens(a?: string, r?: string) { this.accessToken = a; this.refreshToken = r; }
-  get access() { return this.accessToken; }
-  get refresh() { return this.refreshToken; }
+  private read(key: 'access' | 'refresh') {
+    try { return localStorage.getItem(K(key)); } catch { return null; }
+  }
+  private write(key: 'access' | 'refresh', val: string | null) {
+    try {
+      const kk = K(key);
+      if (val) localStorage.setItem(kk, val);
+      else localStorage.removeItem(kk);
+    } catch { }
+  }
 
-  // Opcional: si quieres persistir sesión de pestaña:
-  // usa sessionStorage (no localStorage) y cifra si luego te animas
+  get access() { return this.accessSig(); }
+  get refresh() { return this.refreshSig(); }
+
+  /** Acepta string | null | undefined */
+  set(access?: string | null, refresh?: string | null) {
+    const a = access ?? null;
+    const r = refresh ?? null;
+    this.accessSig.set(a); this.write('access', a);
+    this.refreshSig.set(r); this.write('refresh', r);
+  }
   clear() {
-    this.accessToken = undefined;
-    this.refreshToken = undefined;
+    this.set(null, null);
   }
 }

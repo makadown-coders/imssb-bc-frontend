@@ -13,16 +13,16 @@ export class AuthClient {
     private url(p: string, d: string) { return `${this.cfg.baseUrl}${p || d}`; }
 
     async login(email: string, password: string) {
-        const res = await this.http.post<any>(
+        const res = await firstValueFrom(this.http.post<any>(
             this.url((this.cfg as any).loginPath, '/api/auth/login'),
             { email, password }
-        ).toPromise();
-        this.store.setTokens(res?.access_token, res?.refresh_token);
+        ));
+        this.store.set(res?.access_token, res?.refresh_token);
         return res;
     }
 
     async me() {
-        return await this.http.get<any>(this.url((this.cfg as any).mePath, '/api/auth/me')).toPromise();
+        return await firstValueFrom(this.http.get<any>(this.url((this.cfg as any).mePath, '/api/auth/me')));
     }
 
     async refresh() {
@@ -32,11 +32,31 @@ export class AuthClient {
             this.url((this.cfg as any).refreshPath, '/api/auth/refresh'),
             { refresh_token: rt }
         ));
-        this.store.setTokens(res?.access_token, res?.refresh_token);
+        this.store.set(res?.access_token, res?.refresh_token);
         return res;
     }
 
-    logoutLocal() { this.store.setTokens(undefined, undefined); }
+    /** Revoca en backend (si hay refresh) y SIEMPRE limpia local. */
+    async logout(): Promise<void> {
+        const rt = this.store.refresh;
+        try {
+            if (rt) {
+                await firstValueFrom(
+                    this.http.post(this.url((this.cfg as any).logoutPath, '/api/auth/logout'),
+                        { refresh_token: rt })
+                );
+            }
+        } catch {
+            // ignoramos fallas del backend; igual limpiamos local
+        } finally {
+            this.logoutLocal();
+        }
+    }
+
+    /** Limpia tokens y estado local sin tocar red. */
+    logoutLocal(): void {
+        this.store.clear();
+    }
 }
 
 export { TokenStore };

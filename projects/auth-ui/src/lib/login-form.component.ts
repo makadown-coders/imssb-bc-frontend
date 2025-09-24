@@ -1,5 +1,6 @@
-import { Component, inject, Input, signal } from '@angular/core';
-import { AuthClient } from '@imssb-bc/auth-core';
+// projects/auth-ui/src/lib/login-form.component.ts
+import { Component, EventEmitter, inject, Input, Output, signal } from '@angular/core';
+import { AuthClient, SessionStore } from '@imssb-bc/auth-core';
 import { Router } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
@@ -10,25 +11,34 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatInputModule } from '@angular/material/input';
 
 @Component({
-    selector: 'imssb-login-form',
-    standalone: true,
-    imports: [
-      CommonModule,
-      ReactiveFormsModule,
-      MatCardModule,
-      MatFormFieldModule,
-      MatInputModule,
-      MatButtonModule,
-      MatIconModule
-    ],
-    templateUrl: './login-form.component.html',
-    styleUrls: ['./login-form.component.scss']
+  selector: 'imssb-login-form',
+  standalone: true,
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    MatCardModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule,
+    MatIconModule
+  ],
+  templateUrl: './login-form.component.html',
+  styleUrls: ['./login-form.component.scss']
 })
 export class LoginFormComponent {
   @Input() logoSrc = 'imssb-logo.svg';
   @Input() nombreApp = 'IMSS Bienestar Baja California';
+  /** Si quieres que el form navegue automáticamente al terminar. */
+  @Input() redirectTo: string | null = '/';
+
+  /** Avisa al contenedor que el login fue exitoso. */
+  @Output() loggedIn = new EventEmitter<void>();
+  /** Avisa al contenedor el mensaje de error si falló. */
+  @Output() loginFailed = new EventEmitter<string>();
+
   private fb = inject(FormBuilder);
   private auth = inject(AuthClient);
+  private session = inject(SessionStore);
   private router = inject(Router);
 
   loading = signal(false);
@@ -45,12 +55,21 @@ export class LoginFormComponent {
     if (this.form.invalid || this.loading()) return;
     this.loading.set(true); this.error.set(null);
     try {
-      const { email, password } = this.form.value as any;
+      const { email, password } = this.form.value as { email: string; password: string };
       await this.auth.login(email, password);
-      this.router.navigateByUrl('/'); // redirige al home protegido
+
+      // Hidrata /me para tener nombre/email en la toolbar inmediatamente
+      this.session.hydrate().catch(() => { });
+
+      // Notifica al padre
+      this.loggedIn.emit();
+
+      // Navegación opcional
+      if (this.redirectTo) this.router.navigateByUrl(this.redirectTo);
     } catch (e: any) {
       const msg = e?.error?.error || e?.message || 'Error de autenticación';
       this.error.set(msg);
+      this.loginFailed.emit(msg);
     } finally {
       this.loading.set(false);
     }

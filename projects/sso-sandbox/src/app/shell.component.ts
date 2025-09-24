@@ -103,8 +103,7 @@ export class ShellComponent {
 
   goProfile() { this.router.navigateByUrl('/settings'); }
   async logout() {
-    try { await this.auth.logoutLocal?.(); } catch { }
-    this.session.clear();
+    await this.auth.logout();  // revoca + limpia local
     this.router.navigateByUrl('/login');
   }
 

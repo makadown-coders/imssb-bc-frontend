@@ -1,59 +1,198 @@
-# ImssbBcFrontend
+# README (raíz del workspace)
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 20.2.1.
+> Monorepo Angular 19 para SSO + apps IMSSB-BC
+> Librerías compartidas: **auth-core** (cliente de auth, guard, interceptor, store) y **auth-ui** (componentes de UI como `<imssb-login-form>`).
+> Sandbox de ejemplo: **sso-sandbox** (shell con toolbar/sidenav, menú usuario, árbol de navegación, dashboard demo).
 
-## Development server
+## 📦 Estructura
 
-To start a local development server, run:
-
-```bash
-ng serve
+```
+/
+├─ projects/
+│  ├─ auth-core/         # Lógica de autenticación (TokenStore, AuthClient, Guard, Interceptor)
+│  ├─ auth-ui/           # Componentes UI reutilizables (login-form, etc.)
+│  └─ sso-sandbox/       # App de ejemplo (shell, dashboard, rutas protegidas)
+├─ styles/
+│  └─ _brand.scss        # Tema central (Material M3 + variables CSS + tokens)
+├─ angular.json
+├─ package.json
+└─ tsconfig*.json
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+## ✅ Requisitos
 
-## Code scaffolding
+* Node 20+
+* Angular CLI 19+
+* Backend Node/Express con SSO local (endpoints `/api/auth/*`) corriendo
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+## ⚙️ Variables de entorno (frontend)
 
-```bash
-ng generate component component-name
+La app usa un `AUTH_CONFIG` (InjectionToken) para apuntar al backend:
+
+```ts
+// Ejemplo de provider en main.ts o app.config.ts
+provideAuthConfig({
+  baseUrl: 'https://tu-backend',   // ej. Koyeb
+  loginPath:   '/api/auth/login',
+  refreshPath: '/api/auth/refresh',
+  mePath:      '/api/auth/me',
+  logoutPath:  '/api/auth/logout',
+});
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+> Si no defines los `*Path`, el cliente usa los defaults anteriores.
+
+## 🚀 Desarrollo
+
+Instalar dependencias:
 
 ```bash
-ng generate --help
+npm i
 ```
 
-## Building
-
-To build the project run:
+Compilar libs (primera vez o tras cambios en cada lib):
 
 ```bash
-ng build
+ng build auth-core
+ng build auth-ui
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
+Correr el sandbox:
 
 ```bash
-ng test
+ng serve sso-sandbox
 ```
 
-## Running end-to-end tests
+> El sandbox depende de las libs. Si editas `auth-core`/`auth-ui` con frecuencia, puedes usar `ng build <lib> --watch` en otra terminal.
 
-For end-to-end (e2e) testing, run:
+## 🎨 Theming & Brand
+
+* El tema global está centralizado en **`styles/_brand.scss`**:
+
+  * Define Material M3 con `mat.define-theme` (light/dark).
+  * Expone **variables CSS** (ej. `--toolbar-bg`, `--nav-bg`, `--surface-1`, `--text-strong`…).
+  * Personaliza componentes (toolbar, sidenav, cards, tablas, menús, inputs).
+  * Soporta **modo oscuro** con `body.dark-theme`.
+
+* El sandbox **no** lleva estilos sueltos; usa las clases utilitarias del brand:
+
+  * `.brand-shell` (contenedor principal)
+  * `.brand-sidenav` (+ mini-variant con `.collapsed`)
+  * `.brand-content`
+  * `.surface-card`, `.cards-grid`, `.brand-tree`, etc.
+
+* **Switch sol/luna**: `mat-slide-toggle` mapeado a vars `--switch-*` en el brand.
+
+## 🔐 Autenticación (resumen)
+
+* **auth-core**
+
+  * `TokenStore` (persistente en `localStorage`) con `set()/clear()`.
+  * `AuthClient` (`login`, `refresh`, `me`, `logout`, `logoutLocal`).
+  * `authGuard`: deja pasar si hay `access` o intenta `refresh` con `refresh_token`. Si no, redirige a `/login?returnUrl=<ruta>`.
+  * `authInterceptor`: agrega Bearer y reintenta una vez con `refresh` ante 401.
+
+* **auth-ui**
+
+  * `<imssb-login-form>` emite `(loggedIn)` y opcionalmente navega con `[redirectTo]`.
+  * Tras login, hace `session.hydrate()` para sacar `/me` y mostrar nombre/email en toolbar.
+
+* **sso-sandbox**
+
+  * Rutas:
+
+    ```ts
+    { path: 'login', loadComponent: () => import('./login.page').then(m => m.LoginPage) },
+    {
+      path: '',
+      canActivate: [authGuard],
+      loadComponent: () => import('./shell.component').then(m => m.ShellComponent),
+      children: [
+        { path: '', pathMatch: 'full', redirectTo: 'dash' },
+        { path: 'dash', loadComponent: () => import('./dashboard.page').then(m => m.DashboardPage) },
+        { path: 'welcome', loadComponent: () => import('./welcome.page').then(m => m.WelcomePage) },
+      ],
+    },
+    { path: '**', redirectTo: '' }
+    ```
+  * Shell con **toolbar/sidenav**, **mat-menu** (usuario), **mat-tree** (API nueva con `childrenAccessor`), **mini-variant** colapsable y ajuste de márgenes con `autosize + updateContentMargins()`.
+
+## 🧪 Comandos útiles
 
 ```bash
-ng e2e
+# Compilar libs
+ng build auth-core
+ng build auth-ui
+
+# Servir el sandbox (dev)
+ng serve sso-sandbox
+
+# Pruebas unitarias (si aplican en cada proyecto)
+ng test sso-sandbox
+ng test auth-core
+ng test auth-ui
+
+# Lint (si configuraste eslint)
+ng lint
 ```
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+## 🧱 Crear una nueva app en el workspace
 
-## Additional Resources
+```bash
+ng g application apps/mi-app --style=scss --routing=true
+# o simplemente:
+ng g application mi-app --style=scss --routing=true
+```
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+Luego:
+
+1. Importa el **brand** en `styles.scss` de la app:
+
+```scss
+@use '../../../styles/brand' as brand;
+@include brand.install-brand();
+```
+
+2. Configura rutas como en el sandbox (Shell protegido).
+3. Usa `auth-core` y `auth-ui` como en el sandbox.
+
+## ✅ Checklist para una pantalla protegida
+
+* [ ] Define la ruta como **hija** del `ShellComponent` protegido por `authGuard`.
+* [ ] Usa `.surface-card` para paneles.
+* [ ] Si necesitas tabla: `MatTableModule + paginator + sort`, el brand ya lo estiliza.
+* [ ] Evita estilos locales; si te falta un token/color, agrégalo al **brand**.
+
+## 🧯 Troubleshooting común
+
+* **F5 me saca a login** → asegura:
+
+  * `TokenStore` persiste en `localStorage`.
+  * `authGuard` intenta `refresh()` si no hay `access`.
+  * Tras login, el `LoginForm` guarda tokens y el Shell hace `session.hydrate()`.
+
+* **`mat-form-field must contain a MatFormFieldControl`** → faltan `matInput`/`MatInputModule` o el control no está dentro del `<mat-form-field>`.
+
+* **Menú (`mat-menu`) con fondo extraño/transparente** → revisa en brand los tokens del menú:
+
+  * `--mat-menu-container-color`, `--menu-bg`, `--menu-fg` y estilos del panel `.mat-mdc-menu-panel`.
+
+* **Sidenav colapsa pero el contenido no se ajusta** → usa `autosize` en `mat-sidenav-container` y llama `container.updateContentMargins()` al togglear; o forzar con CSS el `margin-left` usando `--sidenav-width/--sidenav-mini`.
+
+* **Árbol de navegación (deprecaciones)** → usar **API nueva** de `mat-tree` con `[childrenAccessor]` y `#tree.isExpanded(node)`.
+
+* **SCSS de Material (errores de densidad/tipografía/paletas)** → en el brand:
+
+  * `mat.define-theme((color:(theme-type: light|dark, primary: $primary, tertiary: $tertiary), density: (scale: 0)))`
+  * Evita claves no soportadas (ej. `secondary` en M3).
+
+* **Iconos que no aparecen (ej. ojo en password)** → usa `mat-icon` con `fontIcon="visibility"` / `visibility_off` y verifica `MatIconModule`/`material-icons` cargadas.
+
+## 🗺️ Roadmap corto
+
+* [ ] Publicar `auth-core` y `auth-ui` como paquetes internos (o vía `npm link`/`workspace:*`).
+* [ ] Demo de `mat-tab-group` + `mat-menu` “Más” en toolbar.
+* [ ] Guards por **roles** y **scopes** (leyendo `roles` del JWT).
+* [ ] Componentes UI: `UserAvatar` con iniciales y menú contextual.
+* [ ] Librería `shared-ui` para layouts comunes (tablas con filtros, chips, dialogs, etc.)
+

@@ -1,11 +1,18 @@
 import { CanActivateFn, Router } from '@angular/router';
 import { inject } from '@angular/core';
 import { TokenStore } from './token-store.service';
+import { AuthClient } from './auth-client.service';
 
-export const authGuard: CanActivateFn = () => {
-  const store = inject(TokenStore);
+export const authGuard: CanActivateFn = async (_r, state) => {
+  const tokens = inject(TokenStore);
+  const auth = inject(AuthClient);
   const router = inject(Router);
-  if (store.access) return true;
-  router.navigate(['/login']);  // tu ruta de login de la app
+
+  if (tokens.access) return true;
+
+  if (tokens.refresh) {
+    try { await auth.refresh(); return true; } catch { }
+  }
+  router.navigate(['/login'], { queryParams: { returnUrl: state.url } });
   return false;
 };
