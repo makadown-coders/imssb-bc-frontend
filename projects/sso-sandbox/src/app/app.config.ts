@@ -1,11 +1,12 @@
 // projects/sso-sandbox/src/app/app.config.ts
-import { ApplicationConfig } from '@angular/core';
+import { APP_INITIALIZER, ApplicationConfig } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 
 
 import { AUTH_CONFIG, authInterceptor } from '@imssb-bc/auth-core'; // usa tu alias de paths
 import { routes } from './app.routes';
+import { RuntimeConfigService } from './runtime-config.service';
 
 
 export const appConfig: ApplicationConfig = {
@@ -13,10 +14,22 @@ export const appConfig: ApplicationConfig = {
     // provideAnimations(),
     provideRouter(routes),
     provideHttpClient(withInterceptors([authInterceptor])),
-    { provide: AUTH_CONFIG, 
-      useValue: { 
-        baseUrl: 'http://localhost:3000'
-      }
-    }, // ⚠️ apunta a tu backend
+    // 1) Cargar /env.json antes de arrancar
+    {
+      provide: APP_INITIALIZER,
+      multi: true,
+      deps: [RuntimeConfigService],
+      useFactory: (rc: RuntimeConfigService) => () => rc.load(),
+    },
+
+    // 2) Construir AUTH_CONFIG con el valor cargado (fallback local)
+    {
+      provide: AUTH_CONFIG,
+      deps: [RuntimeConfigService],
+      useFactory: (rc: RuntimeConfigService) => ({
+        baseUrl: rc.apiUrl || 'http://localhost:3000',
+        // opcionalmente: loginPath, refreshPath, mePath, logoutPath...
+      }),
+    },
   ],
 };
