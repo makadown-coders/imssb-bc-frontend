@@ -1,12 +1,14 @@
 {
   "name": "imssb-bc-frontend",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "test": "ng test",
+    "build:sso": "node scripts/write-env.mjs projects/sso-sandbox && ng build sso-sandbox",
+    "serve:sso": "node scripts/write-env.mjs projects/sso-sandbox && ng serve sso-sandbox"
   },
   "prettier": {
     "printWidth": 100,
