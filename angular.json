@@ -3,5 +3,161 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
+    "auth-core": {
+      "projectType": "library",
+      "root": "projects/auth-core",
+      "sourceRoot": "projects/auth-core/src",
+      "prefix": "lib",
+      "architect": {
+        "build": {
+          "builder": "@angular/build:ng-packagr",
+          "configurations": {
+            "production": {
+              "tsConfig": "projects/auth-core/tsconfig.lib.prod.json"
+            },
+            "development": {
+              "tsConfig": "projects/auth-core/tsconfig.lib.json"
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "test": {
+          "builder": "@angular/build:karma",
+          "options": {
+            "tsConfig": "projects/auth-core/tsconfig.spec.json"
+          }
+        }
+      }
+    },
+    "auth-ui": {
+      "projectType": "library",
+      "root": "projects/auth-ui",
+      "sourceRoot": "projects/auth-ui/src",
+      "prefix": "lib",
+      "architect": {
+        "build": {
+          "builder": "@angular/build:ng-packagr",
+          "configurations": {
+            "production": {
+              "tsConfig": "projects/auth-ui/tsconfig.lib.prod.json"
+            },
+            "development": {
+              "tsConfig": "projects/auth-ui/tsconfig.lib.json"
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "test": {
+          "builder": "@angular/build:karma",
+          "options": {
+            "tsConfig": "projects/auth-ui/tsconfig.spec.json"
+          }
+        }
+      }
+    },
+    "sso-sandbox": {
+      "projectType": "application",
+      "schematics": {
+        "@schematics/angular:component": {
+          "style": "scss"
+        }
+      },
+      "root": "projects/sso-sandbox",
+      "sourceRoot": "projects/sso-sandbox/src",
+      "prefix": "app",
+      "architect": {
+        "build": {
+          "builder": "@angular/build:application",
+          "options": {
+            "browser": "projects/sso-sandbox/src/main.ts",
+            "polyfills": [
+              "zone.js"
+            ],
+            "tsConfig": "projects/sso-sandbox/tsconfig.app.json",
+            "inlineStyleLanguage": "scss",
+            "assets": [
+              {
+                "glob": "**/*",
+                "input": "projects/sso-sandbox/public"
+              }
+            ],
+            "styles": [
+              "projects/sso-sandbox/src/styles.scss"
+            ],
+            "stylePreprocessorOptions": {
+              "includePaths": [
+                "styles"
+              ]
+            }
+          },
+          "configurations": {
+            "production": {
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "500kB",
+                  "maximumError": "1MB"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "4kB",
+                  "maximumError": "8kB"
+                }
+              ],
+              "outputHashing": "all"
+            },
+            "development": {
+              "optimization": false,
+              "extractLicenses": false,
+              "sourceMap": true
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "serve": {
+          "builder": "@angular/build:dev-server",
+          "configurations": {
+            "production": {
+              "buildTarget": "sso-sandbox:build:production"
+            },
+            "development": {
+              "buildTarget": "sso-sandbox:build:development"
+            }
+          },
+          "defaultConfiguration": "development"
+        },
+        "extract-i18n": {
+          "builder": "@angular/build:extract-i18n"
+        },
+        "test": {
+          "builder": "@angular/build:karma",
+          "options": {
+            "polyfills": [
+              "zone.js",
+              "zone.js/testing"
+            ],
+            "tsConfig": "projects/sso-sandbox/tsconfig.spec.json",
+            "inlineStyleLanguage": "scss",
+            "assets": [
+              {
+                "glob": "**/*",
+                "input": "projects/sso-sandbox/public"
+              }
+            ],
+            "styles": [
+              "projects/sso-sandbox/src/styles.scss"
+            ],
+            "stylePreprocessorOptions": {
+              "includePaths": [
+                "styles"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "cli": {
+    "analytics": false
   }
 }

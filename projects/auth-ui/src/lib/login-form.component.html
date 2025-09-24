@@ -1,0 +1,42 @@
+<!-- projects/auth-ui/src/lib/login-form.component.html -->
+<div class="page-center">
+  <mat-card class="surface-card" style="max-width:720px; width:100%;">
+    <div class="card-header-gold">
+      <h1 class="card-header-title mat-headline-medium">{{ nombreApp }}</h1>
+    </div>
+
+    <div style="padding: 24px; text-align: center;">
+      <img [src]="logoSrc" alt="IMSS Bienestar" style="height:48px; margin:auto;" />
+      <div class="divider-gold"></div>
+
+      <form [formGroup]="form" (ngSubmit)="onSubmit()" class="form">
+        <mat-form-field appearance="outline" class="full">
+          <mat-label>Correo</mat-label>
+          <input matInput type="email" formControlName="email" autocomplete="username" />
+          <mat-error *ngIf="form.controls.email.invalid && (form.controls.email.dirty || form.controls.email.touched)">
+            Ingresa un correo válido
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full">
+          <mat-label>Contraseña</mat-label>
+          <input matInput [type]="show() ? 'text' : 'password'" formControlName="password" autocomplete="current-password" />
+          <button mat-icon-button matSuffix type="button" (click)="toggle()">
+            <mat-icon>{{ show() ? 'visibility_off' : 'visibility' }}</mat-icon>
+          </button>
+          <mat-error *ngIf="form.controls.password.invalid && (form.controls.password.dirty || form.controls.password.touched)">
+            Contraseña requerida
+          </mat-error>
+        </mat-form-field>
+
+        <button mat-raised-button class="brand-btn full" [disabled]="loading() || form.invalid">
+          Entrar
+        </button>
+
+        <div *ngIf="error()" class="mat-body-medium" style="color:#b00020; margin-top:12px;">
+          {{ error() }}
+        </div>
+      </form>
+    </div>
+  </mat-card>
+</div>

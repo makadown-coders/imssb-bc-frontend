@@ -1,0 +1,468 @@
+@use '@angular/material' as mat;
+
+/* Paletas */
+$primary: mat.$green-palette;
+$tertiary: mat.$spring-green-palette;
+
+/* 👇 añade use-system-variables para poder sobreescribir con CSS vars */
+$theme-light: mat.define-theme((color: (theme-type: light, primary: $primary, tertiary: $tertiary, use-system-variables: true),
+            density: (scale: 0),
+        ));
+$theme-dark: mat.define-theme((color: (theme-type: dark, primary: $primary, tertiary: $tertiary, use-system-variables: true),
+            density: (scale: 0),
+        ));
+
+@mixin install-brand() {
+
+    /* ===== LIGHT ===== */
+    :root {
+        @include mat.all-component-themes($theme-light);
+
+        /* Fondo del body (gradiente corporativo) */
+        --bg-grad-top: #0b6f4c;
+        --bg-grad-bottom: #2e8b57;
+
+        /* Superficies y texto */
+        --surface-1: #ffffff;
+        /* 👈 cards blancas en claro */
+        --surface-border: rgba(0, 0, 0, 0.08);
+        --mat-sys-on-surface: #0f1e18;
+        /* texto principal M3 */
+        --text-strong: var(--mat-sys-on-surface);
+        --text-muted: rgba(15, 30, 24, 0.7);
+
+        /* Marca */
+        --imssb-gold: #CBA135;
+        --brand-btn-bg: #006341;
+        --brand-btn-fg: #ffffff;
+
+        /* Shape global */
+        --mdc-shape-small: 12px;
+        --mdc-shape-medium: 16px;
+        --mdc-shape-large: 24px;
+
+        /* Mapear a componentes MDC */
+        --mdc-elevated-card-container-color: var(--surface-1);
+        --mat-toolbar-container-background-color: var(--surface-1);
+
+        /* ===== TextField (outlined) tokens para buen contraste en claro ===== */
+        --mdc-outlined-text-field-container-color: #ffffff;
+        --mdc-outlined-text-field-input-text-color: var(--text-strong);
+        --mdc-outlined-text-field-label-text-color: rgba(0, 0, 0, .60);
+        --mdc-outlined-text-field-caret-color: #006341;
+        --mdc-outlined-text-field-focus-label-text-color: #006341;
+        --mdc-outlined-text-field-outline-color: rgba(0, 0, 0, .38);
+        --mdc-outlined-text-field-hover-outline-color: rgba(0, 0, 0, .60);
+        --mdc-outlined-text-field-focus-outline-color: #006341;
+
+        /* Toolbar */
+        /*--toolbar-bg: var(--surface-1);*/
+        --toolbar-bg: #f0f0f0;
+        --toolbar-fg: var(--text-strong);
+
+        /* Sidenav / Nav */
+        --nav-bg: #f0f0f0;
+        /*#f7faf8;*/
+        /* leve distinto a surface para jerarquía */
+        --nav-fg: var(--text-strong);
+        /*--nav-fg: #0f1e18;*/
+        --nav-hover-bg: rgba(0, 0, 0, .05);
+        --nav-active-bg: #e7efe9;
+        --nav-active-fg: var(--text-strong);
+        /*--nav-active-fg: #0f1e18;*/
+
+        /* Table */
+        --table-bg: var(--surface-1);
+        --table-header-bg: #f0f5f2;
+        --table-header-fg: var(--text-strong);
+        --table-row-hover-bg: rgba(0, 0, 0, .035);
+        --table-border: rgba(0, 0, 0, .08);
+
+        /* Mapea a MDC donde exista var oficial */
+        --mat-toolbar-container-background-color: var(--toolbar-bg);
+        --mat-toolbar-container-text-color: var(--toolbar-fg);
+        --mdc-elevated-card-container-color: var(--surface-1);
+
+        /* Sidenav widths (mini-variant) */
+        --sidenav-width: 280px;
+        --sidenav-mini: 72px;
+
+        /* TextField outlined tokens (LIGHT) */
+        --mdc-outlined-text-field-container-color: #ffffff;
+        --mdc-outlined-text-field-input-text-color: var(--text-strong);
+        --mdc-outlined-text-field-label-text-color: rgba(0, 0, 0, .60);
+        --mdc-outlined-text-field-caret-color: #006341;
+        --mdc-outlined-text-field-focus-label-text-color: #006341;
+        --mdc-outlined-text-field-outline-color: rgba(0, 0, 0, .38);
+        --mdc-outlined-text-field-hover-outline-color: rgba(0, 0, 0, .60);
+        --mdc-outlined-text-field-focus-outline-color: #006341;
+
+        --menu-bg: var(--surface-1);
+        --menu-fg: var(--text-strong);
+
+        /* tokens de mat-menu */
+        --mat-menu-container-color: var(--menu-bg);
+        --mat-menu-item-label-text-color: var(--menu-fg);
+        --mat-menu-item-icon-color: var(--menu-fg);
+
+        /* Colores del switch */
+        --switch-track: #e7efe9;
+        --switch-track-checked: #2e8b57;
+        /* verde claro secundario */
+        --switch-thumb: #ffffff;
+        --switch-thumb-checked: #ffffff;
+
+        /* Iconos sol/luna */
+        --switch-sun: #CBA135;
+        /* dorado */
+        --switch-moon: #0f1e18;
+    }
+
+    /* ===== DARK ===== */
+    body.dark-theme {
+        @include mat.all-component-colors($theme-dark);
+
+        --bg-grad-top: #0b3a2c;
+        --bg-grad-bottom: #134b3a;
+
+        --surface-1: rgba(0, 0, 0, 0.42);
+        /* 👈 cards translúcidas en oscuro */
+        --surface-border: rgba(255, 255, 255, 0.14);
+        --mat-sys-on-surface: #f4f7f6;
+        --text-strong: var(--mat-sys-on-surface);
+        --text-muted: rgba(244, 247, 246, 0.7);
+
+        --brand-btn-bg: var(--imssb-gold);
+        /* dorado en oscuro */
+        --brand-btn-fg: #1a1a1a;
+
+        --mdc-elevated-card-container-color: var(--surface-1);
+        --mat-toolbar-container-background-color: rgba(0, 0, 0, 0.24);
+
+        /* ===== TextField (outlined) en oscuro ===== */
+        --mdc-outlined-text-field-container-color: rgba(255, 255, 255, .06);
+        --mdc-outlined-text-field-input-text-color: var(--text-strong);
+        --mdc-outlined-text-field-label-text-color: rgba(255, 255, 255, .70);
+        --mdc-outlined-text-field-caret-color: var(--imssb-gold);
+        --mdc-outlined-text-field-focus-label-text-color: var(--imssb-gold);
+        --mdc-outlined-text-field-outline-color: rgba(255, 255, 255, .28);
+        --mdc-outlined-text-field-hover-outline-color: rgba(255, 255, 255, .50);
+        --mdc-outlined-text-field-focus-outline-color: var(--imssb-gold);
+
+        --toolbar-bg: rgba(0, 0, 0, .24);
+        --toolbar-fg: var(--text-strong);
+
+        --nav-bg: rgba(0, 0, 0, .28);
+        --nav-fg: var(--text-strong);
+        --nav-hover-bg: rgba(255, 255, 255, .06);
+        --nav-active-bg: rgba(255, 255, 255, .12);
+        --nav-active-fg: var(--text-strong);
+
+        --table-bg: rgba(0, 0, 0, .28);
+        --table-header-bg: rgba(0, 0, 0, .36);
+        --table-header-fg: var(--text-strong);
+        --table-row-hover-bg: rgba(255, 255, 255, .06);
+        --table-border: rgba(255, 255, 255, .14);
+
+        --mat-toolbar-container-background-color: var(--toolbar-bg);
+        --mat-toolbar-container-text-color: var(--toolbar-fg);
+        --mdc-elevated-card-container-color: var(--surface-1);
+
+        /* TextField outlined tokens (DARK) */
+        --mdc-outlined-text-field-container-color: rgba(255, 255, 255, .06);
+        --mdc-outlined-text-field-input-text-color: var(--text-strong);
+        --mdc-outlined-text-field-label-text-color: rgba(255, 255, 255, .70);
+        --mdc-outlined-text-field-caret-color: var(--imssb-gold);
+        --mdc-outlined-text-field-focus-label-text-color: var(--imssb-gold);
+        --mdc-outlined-text-field-outline-color: rgba(255, 255, 255, .28);
+        --mdc-outlined-text-field-hover-outline-color: rgba(255, 255, 255, .50);
+        --mdc-outlined-text-field-focus-outline-color: var(--imssb-gold);
+
+        --menu-bg: rgba(0, 0, 0, .30);
+        /* un toque “glass”; usa var(--surface-1) si lo prefieres sólido */
+        --menu-fg: var(--text-strong);
+
+        --mat-menu-container-color: var(--menu-bg);
+        --mat-menu-item-label-text-color: var(--menu-fg);
+        --mat-menu-item-icon-color: var(--menu-fg);
+
+        --switch-track: rgba(255, 255, 255, .22);
+        --switch-track-checked: #CBA135;
+        /* dorado */
+        --switch-thumb: #121212;
+        --switch-thumb-checked: #121212;
+
+        --switch-sun: #ccb87a;
+        /* sol más tenue */
+        --switch-moon: #CBA135;
+        /* luna dorada */
+    }
+
+    /* Reset + fuente + color global de texto */
+    html,
+    body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+    }
+
+    body {
+        background: linear-gradient(to bottom, var(--bg-grad-top), var(--bg-grad-bottom));
+        font-family: "Noto Sans", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+        color: var(--text-strong);
+    }
+
+    /* === Utilidades reutilizables (para TODAS las apps) === */
+    .page-center {
+        min-height: 100dvh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+    }
+
+    /* más específico que .mat-mdc-card */
+    .mat-mdc-card.surface-card,
+    .surface-card.mat-mdc-card {
+        /* usa la var de MDC para “hablar” con el componente */
+        --mdc-elevated-card-container-color: var(--surface-1);
+
+        /* y por compatibilidad, fija también la propiedad */
+        background-color: var(--mdc-elevated-card-container-color);
+        background: var(--mdc-elevated-card-container-color);
+
+        color: var(--text-strong);
+        border-radius: 20px;
+        border: 1px solid var(--surface-border);
+        box-shadow: 0 10px 28px rgba(0, 0, 0, 0.18);
+        backdrop-filter: blur(6px);
+    }
+
+    .brand-btn {
+        --mdc-filled-button-container-color: var(--brand-btn-bg);
+        --mdc-filled-button-label-text-color: var(--brand-btn-fg);
+        border-radius: 9999px;
+        padding-inline: 18px;
+    }
+
+    /* Encabezado dorado reusable */
+    .card-header-gold {
+        background: var(--imssb-gold);
+        padding: 12px 16px;
+        border-radius: 20px;
+    }
+
+    .card-header-title {
+        margin: 0;
+        text-align: center;
+        color: #064b37;
+    }
+
+    /* Form helpers */
+    .form {
+        max-width: 420px;
+        margin: 0 auto;
+        text-align: left;
+    }
+
+    .full {
+        width: 100%;
+    }
+
+    .divider-gold {
+        width: 96px;
+        border-top: 4px solid var(--imssb-gold);
+        margin: 16px auto;
+    }
+
+    /* ====== UTILIDADES / MAPEOS COMPONENTE ====== */
+
+    /* Layout base para apps con sidenav */
+    .brand-shell {
+        height: 100dvh;
+    }
+
+    .brand-content {
+        padding: 16px;
+    }
+
+    /* Toolbar (ambos selectores por compatibilidad) */
+    .mat-toolbar,
+    .mat-mdc-toolbar {
+        background: var(--toolbar-bg);
+        color: var(--toolbar-fg);
+        border-bottom: 1px solid var(--surface-border);
+    }
+
+    /* Sidenav + mini-variant */
+    .mat-drawer-container,
+    .mat-sidenav-container {
+        background: transparent;
+    }
+
+    .brand-sidenav.mat-drawer,
+    .brand-sidenav.mat-sidenav,
+    .brand-sidenav.mat-mdc-sidenav {
+        width: var(--sidenav-width);
+        background: var(--nav-bg);
+        color: var(--nav-fg);
+        border-right: 1px solid var(--surface-border);
+        transition: width .2s ease;
+        overflow: hidden;
+    }
+
+    .brand-sidenav.collapsed {
+        width: var(--sidenav-mini);
+    }
+
+    .brand-sidenav .nav-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 12px;
+        border-radius: 12px;
+        margin: 2px 8px;
+        cursor: pointer;
+    }
+
+    .brand-sidenav .nav-row:hover {
+        background: var(--nav-hover-bg);
+    }
+
+    .brand-sidenav .nav-row.active {
+        background: var(--nav-active-bg);
+        color: var(--nav-active-fg);
+    }
+
+    .brand-sidenav .nav-icon {
+        width: 24px;
+        height: 24px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .brand-sidenav .nav-label {
+        white-space: nowrap;
+        transition: opacity .15s ease;
+    }
+
+    .brand-sidenav.collapsed .nav-label {
+        opacity: 0;
+        width: 0;
+        overflow: hidden;
+    }
+
+    /* mat-tree dentro del sidenav */
+    .brand-tree {
+        padding: 4px 6px;
+    }
+
+    .brand-tree .mat-nested-tree-node .nav-row {
+        margin-left: 28px;
+    }
+
+    .brand-tree .toggle {
+        margin-right: 4px;
+    }
+
+    /* Cards reusables */
+    .surface-card {
+        --mdc-elevated-card-container-color: var(--surface-1);
+        background-color: var(--mdc-elevated-card-container-color);
+        color: var(--text-strong);
+        border-radius: 20px;
+        border: 1px solid var(--surface-border);
+        box-shadow: 0 10px 28px rgba(0, 0, 0, 0.18);
+        backdrop-filter: blur(6px);
+    }
+
+    /* Botón filled con colores de marca */
+    .brand-btn {
+        --mdc-filled-button-container-color: var(--brand-btn-bg);
+        --mdc-filled-button-label-text-color: var(--brand-btn-fg);
+        border-radius: 9999px;
+        padding-inline: 18px;
+    }
+
+    /* Tabla */
+    .mat-mdc-table {
+        background: var(--table-bg);
+        color: var(--text-strong);
+        border: 1px solid var(--table-border);
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    .mat-mdc-header-row {
+        background: var(--table-header-bg);
+        color: var(--table-header-fg);
+    }
+
+    .mat-mdc-row:hover {
+        background: var(--table-row-hover-bg);
+    }
+
+    .mat-mdc-cell,
+    .mat-mdc-header-cell {
+        border-bottom-color: var(--table-border);
+    }
+
+    .mat-mdc-paginator {
+        background: var(--surface-1);
+        border: 1px solid var(--table-border);
+        border-radius: 12px;
+    }
+
+    /* Grid de tarjetas */
+    .cards-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 16px;
+    }
+
+    .mat-drawer-content {
+        transition: margin .2s ease;
+    }
+
+    /* wrapper del control en la toolbar */
+    .theme-switch {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 0 6px;
+        border-radius: 9999px;
+        background: transparent;
+        /* la toolbar ya da el fondo */
+    }
+
+    /* Íconos sol/luna */
+    .theme-switch .sun {
+        color: var(--switch-sun);
+        font-variation-settings: 'FILL' 1;
+    }
+
+    .theme-switch .moon {
+        color: var(--switch-moon);
+        font-variation-settings: 'FILL' 1;
+    }
+
+    /* Personalización del MDC switch mediante CSS vars */
+    .theme-toggle .mdc-switch {
+        /* track */
+        --mdc-switch-selected-track-color: var(--switch-track-checked);
+        --mdc-switch-unselected-track-color: var(--switch-track);
+        /* handle */
+        --mdc-switch-selected-handle-color: var(--switch-thumb-checked);
+        --mdc-switch-unselected-handle-color: var(--switch-thumb);
+        /* sin íconos internos del handle */
+        --mdc-switch-selected-icon-color: transparent;
+        --mdc-switch-unselected-icon-color: transparent;
+    }
+
+    /* Suaviza animación */
+    .theme-toggle .mdc-switch,
+    .mat-drawer-content {
+        transition: margin .2s ease;
+    }
+}

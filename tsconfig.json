@@ -3,6 +3,14 @@
 {
   "compileOnSave": false,
   "compilerOptions": {
+    "paths": {
+      "@imssb-bc/auth-core": [
+        "./dist/auth-core"
+      ],
+      "@imssb-bc/auth-ui": [
+        "./dist/auth-ui"
+      ]
+    },
     "strict": true,
     "noImplicitOverride": true,
     "noPropertyAccessFromIndexSignature": true,
@@ -22,5 +30,25 @@
     "typeCheckHostBindings": true,
     "strictTemplates": true
   },
-  "files": []
+  "files": [],
+  "references": [
+    {
+      "path": "./projects/auth-core/tsconfig.lib.json"
+    },
+    {
+      "path": "./projects/auth-core/tsconfig.spec.json"
+    },
+    {
+      "path": "./projects/auth-ui/tsconfig.lib.json"
+    },
+    {
+      "path": "./projects/auth-ui/tsconfig.spec.json"
+    },
+    {
+      "path": "./projects/sso-sandbox/tsconfig.app.json"
+    },
+    {
+      "path": "./projects/sso-sandbox/tsconfig.spec.json"
+    }
+  ]
 }

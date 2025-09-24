@@ -1,0 +1,12 @@
+<!-- projects/sso-sandbox/src/app/welcome.page.html -->
+<div class="page-center">
+  <mat-card class="surface-card" style="width:min(880px,100%); padding:28px;">
+    <h1 class="mat-headline-large">Bienvenid@</h1>
+    <p class="mat-body-large">Sesión activa.</p>
+
+    <div style="display:flex; gap:12px; align-items:center;">
+      <button mat-raised-button class="brand-btn" (click)="logout()">Cerrar sesión</button>
+      <button mat-button (click)="toggleTheme()">Tema: {{ theme() }}</button>
+    </div>
+  </mat-card>
+</div>
