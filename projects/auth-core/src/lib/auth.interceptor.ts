@@ -15,7 +15,7 @@ import { catchError, switchMap } from 'rxjs/operators';
  * Si el refresh también falla, propagamos el error original.
  * @returns {Observable<any>} Observable con la respuesta de la petición o el error si falla.
  */
-export const authInterceptor: HttpInterceptorFn = (req, next): Observable<any> => {
+export const AuthInterceptor: HttpInterceptorFn = (req, next): Observable<any> => {
   const store = inject(TokenStore);
   const client = inject(AuthClient);
 

@@ -1,0 +1,76 @@
+<mat-sidenav-container class="brand-shell" autosize>
+  <mat-sidenav class="brand-sidenav" [class.collapsed]="collapsed()" mode="side" opened>
+    <div style="padding:16px 12px; font-weight:700;">
+      <span class="nav-label">TI</span>
+    </div>
+
+    <!-- Árbol nuevo -->
+    <mat-tree #tree [dataSource]="dataSource" [childrenAccessor]="childrenAccessor" class="brand-tree">
+
+      <!-- Nodo padre / expandible -->
+      <mat-tree-node *matTreeNodeDef="let node; when: hasChild" matTreeNodePadding
+        [cdkTreeNodeTypeaheadLabel]="node.name">
+        <!-- Row clickeable para expandir (y no navegar) -->
+        <div class="nav-row" matTreeNodeToggle [class.active]="isActive(node)">
+          <button mat-icon-button class="toggle" matTreeNodeToggle (click)="$event.stopPropagation()"
+            [attr.aria-label]="'Toggle ' + node.name">
+            <mat-icon class="mat-icon-rtl-mirror">
+              {{ tree.isExpanded(node) ? 'expand_more' : 'chevron_right' }}
+            </mat-icon>
+          </button>
+          <mat-icon class="nav-icon">{{ node.icon || 'folder' }}</mat-icon>
+          <span class="nav-label">{{ node.name }}</span>
+        </div>
+      </mat-tree-node>
+
+      <!-- Nodo hoja -->
+      <mat-tree-node *matTreeNodeDef="let node" matTreeNodePadding>
+        <div class="nav-row" (click)="go(node)" [class.active]="isActive(node)" matTooltip="{{ node.name }}"
+          [matTooltipDisabled]="!collapsed()">
+          <mat-icon class="nav-icon">{{ node.icon || 'insert_drive_file' }}</mat-icon>
+          <span class="nav-label">{{ node.name }}</span>
+        </div>
+      </mat-tree-node>
+    </mat-tree>
+  </mat-sidenav>
+
+  <mat-sidenav-content>
+    <mat-toolbar>
+      <!-- colapsar/expandir sidenav -->
+      <button mat-icon-button (click)="toggleCollapse()" aria-label="Toggle menu">
+        <mat-icon>{{ collapsed() ? 'menu_open' : 'menu' }}</mat-icon>
+      </button>
+
+      <span class="mat-headline-small" style="margin-left:8px;">
+        <img [src]="logoSrc" alt="IMSS Bienestar" style="height:48px; margin:auto;" />        
+      </span>
+      <span style="flex:1;"></span>
+
+      <!-- Cambiar tema -->
+      <div class="theme-switch" aria-label="Cambiar tema">
+        <mat-icon class="sun">light_mode</mat-icon>
+
+        <mat-slide-toggle class="theme-toggle" [checked]="isDark()" (change)="onThemeToggle($event.checked)"
+          [disableRipple]="true" aria-label="Cambiar entre tema claro y oscuro">
+        </mat-slide-toggle>
+
+        <mat-icon class="moon">dark_mode</mat-icon>
+      </div>
+
+
+      <!-- Menú de usuario -->
+      <button mat-button [matMenuTriggerFor]="userMenu">
+        <mat-icon>account_circle</mat-icon>
+        <span class="nav-label">{{ session.user()?.name || 'Usuario' }}</span>
+      </button>
+      <mat-menu #userMenu="matMenu">
+        <button mat-menu-item (click)="goProfile()"><mat-icon>person</mat-icon><span>Perfil</span></button>
+        <button mat-menu-item (click)="logout()"><mat-icon>logout</mat-icon><span>Cerrar sesión</span></button>
+      </mat-menu>
+    </mat-toolbar>
+
+    <div class="brand-content">
+      <router-outlet />
+    </div>
+  </mat-sidenav-content>
+</mat-sidenav-container>

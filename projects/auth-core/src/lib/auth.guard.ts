@@ -3,7 +3,7 @@ import { inject } from '@angular/core';
 import { TokenStore } from './token-store.service';
 import { AuthClient } from './auth-client.service';
 
-export const authGuard: CanActivateFn = async (_r, state) => {
+export const AuthGuard: CanActivateFn = async (_r, state) => {
   const tokens = inject(TokenStore);
   const auth = inject(AuthClient);
   const router = inject(Router);

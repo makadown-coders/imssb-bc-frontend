@@ -49,6 +49,9 @@
     },
     {
       "path": "./projects/sso-sandbox/tsconfig.spec.json"
+    },
+    {
+      "path": "./projects/ti-admin/tsconfig.app.json"
     }
   ]
 }

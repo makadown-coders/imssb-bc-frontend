@@ -1,0 +1,5 @@
+/* You can add global styles to this file, and also import other style files */
+@use 'brand' as brand; // gracias a includePaths:["styles"]
+
+@include brand.install-brand();
+// Aquí solo helpers mínimos específicos de esta app si hicieran falta.

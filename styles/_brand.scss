@@ -19,8 +19,10 @@ $theme-dark: mat.define-theme((color: (theme-type: dark, primary: $primary, tert
         @include mat.all-component-themes($theme-light);
 
         /* Fondo del body (gradiente corporativo) */
-        --bg-grad-top: #0b6f4c;
-        --bg-grad-bottom: #2e8b57;
+        --bg-grad-top: #ffffff;
+        /*#0b6f4c;*/
+        --bg-grad-bottom: #add2be;
+        /* #2e8b57;*/
 
         /* Superficies y texto */
         --surface-1: #ffffff;
@@ -57,11 +59,12 @@ $theme-dark: mat.define-theme((color: (theme-type: dark, primary: $primary, tert
 
         /* Toolbar */
         /*--toolbar-bg: var(--surface-1);*/
-        --toolbar-bg: #f0f0f0;
+        --toolbar-bg: #ffffff;
         --toolbar-fg: var(--text-strong);
 
         /* Sidenav / Nav */
-        --nav-bg: #f0f0f0;
+        --nav-bg: #ffffff;
+        /*#f0f0f0;*/
         /*#f7faf8;*/
         /* leve distinto a surface para jerarquía */
         --nav-fg: var(--text-strong);
@@ -116,6 +119,26 @@ $theme-dark: mat.define-theme((color: (theme-type: dark, primary: $primary, tert
         --switch-sun: #CBA135;
         /* dorado */
         --switch-moon: #0f1e18;
+
+        /* === mat-select (panel) en claro === */
+        --mat-select-panel-background-color: var(--surface-1);
+        /* blanco sólido */
+        --mat-select-panel-text-color: var(--text-strong);
+        --mat-select-enabled-trigger-text-color: var(--text-strong);
+        --mat-select-focused-arrow-color: var(--text-strong);
+
+        /* mat-option dentro del panel */
+        --mat-option-label-text-color: var(--text-strong);
+        --mat-option-selected-state-label-text-color: var(--text-strong);
+        --mat-option-hover-state-layer-color: rgba(0, 0, 0, .05);
+        --mat-option-focus-state-layer-color: rgba(0, 0, 0, .06);
+
+        .mat-mdc-select-panel {
+            background-color: var(--mat-select-panel-background-color, var(--surface-1)) !important;
+            color: var(--mat-select-panel-text-color, var(--text-strong)) !important;
+            border: 1px solid var(--surface-border);
+            backdrop-filter: blur(6px);
+        }
     }
 
     /* ===== DARK ===== */
@@ -125,12 +148,15 @@ $theme-dark: mat.define-theme((color: (theme-type: dark, primary: $primary, tert
         --bg-grad-top: #0b3a2c;
         --bg-grad-bottom: #134b3a;
 
-        --surface-1: rgba(0, 0, 0, 0.42);
+        --surface-1: rgba(12, 28, 23, 0.66);
+        /* antes: rgba(0, 0, 0, 0.42) */
         /* 👈 cards translúcidas en oscuro */
         --surface-border: rgba(255, 255, 255, 0.14);
         --mat-sys-on-surface: #f4f7f6;
-        --text-strong: var(--mat-sys-on-surface);
-        --text-muted: rgba(244, 247, 246, 0.7);
+        --text-strong: #F7FAF9;
+        /* var(--mat-sys-on-surface); */
+        --text-muted: rgba(247, 250, 249, .78);
+        /* rgba(244, 247, 246, 0.7); */
 
         --brand-btn-bg: var(--imssb-gold);
         /* dorado en oscuro */
@@ -158,11 +184,15 @@ $theme-dark: mat.define-theme((color: (theme-type: dark, primary: $primary, tert
         --nav-active-bg: rgba(255, 255, 255, .12);
         --nav-active-fg: var(--text-strong);
 
-        --table-bg: rgba(0, 0, 0, .28);
-        --table-header-bg: rgba(0, 0, 0, .36);
+        --table-bg: rgba(255, 255, 255, .04);
+        /*rgba(0, 0, 0, .28); */
+        --table-header-bg: rgba(255, 255, 255, .08);
+        /* rgba(0, 0, 0, .36); */
         --table-header-fg: var(--text-strong);
-        --table-row-hover-bg: rgba(255, 255, 255, .06);
-        --table-border: rgba(255, 255, 255, .14);
+        --table-row-hover-bg: rgba(255, 255, 255, .08);
+        /* rgba(255, 255, 255, .06); */
+        --table-border: rgba(255, 255, 255, .20);
+        /* rgba(255, 255, 255, .14); */
 
         --mat-toolbar-container-background-color: var(--toolbar-bg);
         --mat-toolbar-container-text-color: var(--toolbar-fg);
@@ -171,20 +201,36 @@ $theme-dark: mat.define-theme((color: (theme-type: dark, primary: $primary, tert
         /* TextField outlined tokens (DARK) */
         --mdc-outlined-text-field-container-color: rgba(255, 255, 255, .06);
         --mdc-outlined-text-field-input-text-color: var(--text-strong);
-        --mdc-outlined-text-field-label-text-color: rgba(255, 255, 255, .70);
+        /* --mdc-outlined-text-field-label-text-color: rgba(255, 255, 255, .70); */
+        --mdc-outlined-text-field-label-text-color: rgba(255, 255, 255, .82);
         --mdc-outlined-text-field-caret-color: var(--imssb-gold);
         --mdc-outlined-text-field-focus-label-text-color: var(--imssb-gold);
-        --mdc-outlined-text-field-outline-color: rgba(255, 255, 255, .28);
-        --mdc-outlined-text-field-hover-outline-color: rgba(255, 255, 255, .50);
+        /*--mdc-outlined-text-field-outline-color: rgba(255, 255, 255, .28);*/
+        --mdc-outlined-text-field-outline-color: rgba(255, 255, 255, .36);
+        /*--mdc-outlined-text-field-hover-outline-color: rgba(255, 255, 255, .50);*/
+        --mdc-outlined-text-field-hover-outline-color: rgba(255, 255, 255, .56);
         --mdc-outlined-text-field-focus-outline-color: var(--imssb-gold);
 
-        --menu-bg: rgba(0, 0, 0, .30);
+        --mat-table-background-color: var(--table-bg);
+        --mat-table-header-headline-color: var(--table-header-fg);
+        --mat-table-row-item-label-text-color: rgba(255, 255, 255, .92);
+        /* texto de filas */
+        --mat-table-row-item-outline-color: var(--table-border);
+        --mat-table-row-item-hover-state-layer-color: var(--table-row-hover-bg);
+
+
+        --menu-bg: rgba(0, 0, 0, .40);
+        /* rgba(0, 0, 0, .30); */
         /* un toque “glass”; usa var(--surface-1) si lo prefieres sólido */
         --menu-fg: var(--text-strong);
 
         --mat-menu-container-color: var(--menu-bg);
-        --mat-menu-item-label-text-color: var(--menu-fg);
-        --mat-menu-item-icon-color: var(--menu-fg);
+        --mat-menu-item-label-text-color: var(--text-strong);
+        /*var(--menu-fg);*/
+        --mat-menu-item-icon-color: var(--text-strong);
+        /* var(--menu-fg); */
+        --mat-toolbar-container-background-color: rgba(0, 0, 0, .28);
+        /* +congruencia con surface */
 
         --switch-track: rgba(255, 255, 255, .22);
         --switch-track-checked: #CBA135;
@@ -196,6 +242,148 @@ $theme-dark: mat.define-theme((color: (theme-type: dark, primary: $primary, tert
         /* sol más tenue */
         --switch-moon: #CBA135;
         /* luna dorada */
+
+        /* === Contraste global de tabla/tipografía en oscuro === */
+        --text-strong: #F7FAF9;
+        /* texto principal más brillante */
+        --text-muted: rgba(247, 250, 249, .78);
+
+        --table-bg: rgba(255, 255, 255, .04);
+        --table-header-bg: rgba(255, 255, 255, .08);
+        --table-header-fg: var(--text-strong);
+        --table-row-hover-bg: rgba(255, 255, 255, .08);
+        --table-border: rgba(255, 255, 255, .20);
+
+        /* Mapear a tokens de Material v19 (M3) para filas/encabezados */
+        --mat-table-background-color: var(--table-bg);
+        --mat-table-header-headline-color: var(--table-header-fg);
+        --mat-table-row-item-label-text-color: rgba(255, 255, 255, .92);
+        /* CELDAS  */
+        --mat-table-row-item-outline-color: var(--table-border);
+        --mat-table-row-item-hover-state-layer-color: var(--table-row-hover-bg);
+
+        /* Tipos de texto usados en tus títulos/descripciones */
+        --mat-sys-on-surface: var(--text-strong);
+        /* refuerza color base */
+        /* Fondo/colores de tabla globales en dark */
+        --mat-table-background-color: var(--table-bg);
+        --mat-table-header-headline-color: var(--text-strong);
+        --mat-table-row-item-label-text-color: rgba(255, 255, 255, .92);
+        --mat-table-row-item-outline-color: var(--table-border);
+        --mat-table-row-item-hover-state-layer-color: var(--table-row-hover-bg);
+
+        /* Evitar superficies claras por defecto en wrappers no controlados */
+        .mat-mdc-table {
+            background: var(--table-bg);
+        }
+
+        .mat-mdc-header-row,
+        .mat-mdc-row {
+            background-color: transparent;
+        }
+
+        /* si usas la clase .inv-table en tu tabla del inventario */
+        /*  .mat-body-medium,
+        .mat-body-large,
+        .mat-title-medium,
+        .mat-headline-small {
+            color: var(--text-strong) !important;
+        }*/
+
+        /* El contenedor “card” de la tabla no debe ser blanco */
+        .inv-card {
+            background: transparent !important;
+        }
+
+        /* Fondo de la tabla consistente con tus vars de dark */
+        .inv-table.mat-mdc-table {
+            background: var(--table-bg) !important;
+            /* rgba(255,255,255,.04) por tu brand */
+            color: var(--text-strong) !important;
+            /* #F7FAF9 */
+            border-color: var(--table-border) !important;
+        }
+
+        /* Filas/encabezados transparentes para que se vea el fondo de la tabla */
+        .inv-table .mat-mdc-header-row,
+        .inv-table .mat-mdc-row {
+            background-color: transparent !important;
+        }
+
+        /* Texto de celdas y encabezados siempre legible */
+        .inv-table .mat-mdc-header-cell,
+        .inv-table .mat-mdc-cell {
+            color: var(--text-strong) !important;
+            opacity: 1 !important;
+        }
+
+        /* Subtítulo/modelo y labels muted */
+        .inv-title .mat-body-medium,
+        .inv-table .cell-model .sub,
+        .inv-table .type-label {
+            color: var(--text-muted) !important;
+        }
+
+        /* Icono de tipo visible en oscuro */
+        .inv-table .type-icon {
+            color: #b7ebd0 !important;
+        }
+
+        /* Pills/chips en oscuro */
+        .badge-serial {
+            background: rgba(186, 230, 201, .20) !important;
+            color: #E7F7EE !important;
+            border-color: rgba(186, 230, 201, .35) !important;
+        }
+
+        .chip--operativo {
+            background: rgba(46, 139, 87, .24) !important;
+            color: #B7EBD0 !important;
+        }
+
+        .chip--operativo .dot {
+            background: #6EE7B7 !important;
+        }
+
+        .chip--mantenimiento {
+            background: rgba(203, 161, 53, .22) !important;
+            color: #F9E3BA !important;
+        }
+
+        .chip--mantenimiento .dot {
+            background: #F5D48A !important;
+        }
+
+        /* === mat-select (panel) en oscuro: fondo y texto sólidos === */
+        --mat-select-panel-background-color: rgba(0, 0, 0, .54);
+        /* o usa var(--surface-1) si prefieres sólido */
+        --mat-select-panel-text-color: var(--text-strong);
+        --mat-select-enabled-trigger-text-color: var(--text-strong);
+        --mat-select-focused-arrow-color: var(--text-strong);
+
+        /* mat-option (items del panel) */
+        --mat-option-label-text-color: var(--text-strong);
+        --mat-option-selected-state-label-text-color: var(--text-strong);
+        --mat-option-hover-state-layer-color: rgba(255, 255, 255, .08);
+        --mat-option-focus-state-layer-color: rgba(255, 255, 255, .10);
+        --mat-option-selected-state-layer-color: rgba(203, 161, 53, .22);
+
+        /* Fuerza estilos del panel del select */
+        .mat-mdc-select-panel {
+            background-color: var(--mat-select-panel-background-color, rgba(0, 0, 0, .54)) !important;
+            color: var(--mat-select-panel-text-color, var(--text-strong)) !important;
+            border: 1px solid var(--surface-border);
+            backdrop-filter: blur(6px);
+        }
+
+        .mat-mdc-option,
+        .mat-mdc-option .mdc-list-item__primary-text {
+            color: var(--text-strong) !important;
+        }
+
+        .mdc-list-item--selected .mdc-list-item__primary-text {
+            font-weight: 600;
+        }
     }
 
     /* Reset + fuente + color global de texto */
@@ -464,5 +652,14 @@ $theme-dark: mat.define-theme((color: (theme-type: dark, primary: $primary, tert
     .theme-toggle .mdc-switch,
     .mat-drawer-content {
         transition: margin .2s ease;
+    }
+
+    .mat-mdc-table .mat-mdc-cell,
+    .mat-mdc-table .mat-mdc-header-cell {
+        color: var(--text-strong);
+    }
+
+    .inv-table .cell-model .sub {
+        color: var(--text-muted);
     }
 }

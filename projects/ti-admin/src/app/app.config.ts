@@ -1,17 +1,12 @@
-// projects/sso-sandbox/src/app/app.config.ts
 import { APP_INITIALIZER, ApplicationConfig } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
-
-
 import { AUTH_CONFIG, AuthInterceptor } from '@imssb-bc/auth-core'; // usa tu alias de paths
 import { routes } from './app.routes';
-import { RuntimeConfigService } from './runtime-config.service';
-
+import { RuntimeConfigService } from './services/runtime-config.service';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    // provideAnimations(),
     provideRouter(routes),
     provideHttpClient(withInterceptors([AuthInterceptor])),
     // 1) Cargar /env.json antes de arrancar

@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { authGuard } from '@imssb-bc/auth-core';
+import { AuthGuard } from '@imssb-bc/auth-core';
 
 export const routes: Routes = [
   // Login público
@@ -8,7 +8,7 @@ export const routes: Routes = [
   // Área autenticada con Shell (toolbar + sidenav)
   {
     path: '',
-    canActivate: [authGuard],
+    canActivate: [AuthGuard],
     loadComponent: () => import('./shell.component').then(m => m.ShellComponent),
     children: [
       { path: '', pathMatch: 'full', redirectTo: 'dash' },

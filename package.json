@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "scripts": {
     "build:sso": "node scripts/write-env.mjs projects/sso-sandbox && ng build auth-core && ng build auth-ui && ng build sso-sandbox",
-    "serve:sso": "node scripts/write-env.mjs projects/sso-sandbox && ng serve sso-sandbox"
+    "serve:sso": "node scripts/write-env.mjs projects/sso-sandbox && ng serve sso-sandbox",
+    "build:ti-admin": "node scripts/write-env.mjs projects/ti-admin && ng build auth-core && ng build auth-ui && ng build ti-admin",
+    "serve:ti-admin": "node scripts/write-env.mjs projects/ti-admin && ng build auth-core && ng build auth-ui && ng serve ti-admin"
   },
   "prettier": {
     "printWidth": 100,
