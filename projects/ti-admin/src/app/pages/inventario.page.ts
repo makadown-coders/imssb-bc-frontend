@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, ViewChild, computed, signal } from '@angular/core';
+import { Component, OnInit, inject, ViewChild, computed, signal, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatTableModule } from '@angular/material/table';
@@ -14,11 +14,15 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatRippleModule } from '@angular/material/core';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { Equipo, TiService } from '../services/ti.service';
+import { TiService } from '../services/ti.service';
 import { EquipoDialog } from '../shared/equipo-dialog';
-
-type EstadoKey = Equipo['estado'];
-type TipoKey = Equipo['tipo'];
+import { Equipo } from '../models/Equipo';
+import { EstadoKey } from '../models/EstadoKey';
+import { TipoKey } from '../models/TipoKey';
+import { DispositivoRow, EquipoVM, TipoDispositivo } from '../models';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { CatalogosService } from '../services/catalogos.service';
+import { DispositivosService } from '../services/dispositivos.service';
 
 @Component({
   standalone: true,
@@ -28,126 +32,156 @@ type TipoKey = Equipo['tipo'];
     MatTableModule, MatPaginatorModule, MatSortModule,
     MatFormFieldModule, MatInputModule, MatButtonModule, MatIconModule,
     MatSelectModule, MatMenuModule, MatTooltipModule, MatDividerModule, MatRippleModule,
-    MatDialogModule
+    MatDialogModule, MatSnackBarModule
   ],
   templateUrl: './inventario.page.html',
   styleUrls: ['./inventario.page.scss']
 })
 export class InventarioPage implements OnInit {
-  private svc = inject(TiService);
+  private api = inject(DispositivosService);
+  private cat = inject(CatalogosService);
   private dialog = inject(MatDialog);
+  private snack = inject(MatSnackBar);
 
-  displayedColumns: string[] = ['tipo', 'modelo', 'serie', 'ubicacion', 'responsable', 'estado', 'acciones'];
+  // dataset real (crudo) y view-model
+  rows = signal<DispositivoRow[]>([]);
+  vms = signal<EquipoVM[]>([]);
 
-  // Filtros / búsqueda
+  // filtros UI (mantengo tu UI actual)
   q = signal<string>('');
-  tipo = signal<'ALL' | TipoKey>('ALL');
-  estado = signal<'ALL' | EstadoKey>('ALL');
+  tipo = signal<string | undefined>(undefined);   // value = id en string o undefined
+  estado = signal<string | undefined>(undefined); // NO-OP por ahora
 
-  // Datos
-  raw = signal<Equipo[]>([]);
-  filtered = computed(() => {
+  // opciones de selects
+  tipoOptions = signal<{ value: string | undefined; label: string; }[]>([{ value: undefined, label: 'Todos los tipos' }]);
+  estadoOptions = signal<{ value: string | undefined; label: string; }[]>([
+    { value: undefined, label: 'Todos los estados' } // hasta que definamos historial/estado actual
+  ]);
+
+  displayedColumns = ['tipo', 'modelo', 'serie', 'ubicacion', 'responsable', 'estado', 'acciones'];
+
+  // 👇 crea el effect como campo de clase (esto SÍ tiene injection context)
+  private readonly _syncVMs = effect(() => {
+    const all = this.rows();
     const q = this.q().trim().toLowerCase();
-    const t = this.tipo();
-    const e = this.estado();
+    const tipoId = this.tipo();
 
-    return this.raw().filter(r => {
-      const text = [
-        r.etiqueta, r.serie, r.tipo, r.marca, r.modelo, r.ubicacion, r.responsable_id, r.estado
-      ].map(v => (v ?? '').toString().toLowerCase()).join(' | ');
-      const matchQ = q ? text.includes(q) : true;
-      const matchT = t === 'ALL' ? true : r.tipo === t;
-      const matchE = e === 'ALL' ? true : r.estado === e;
-      return matchQ && matchT && matchE;
+    const filtered = all.filter(r => {
+      const okTipo = !tipoId || tipoId === String((r as any).tipo_dispositivo_id ?? '');
+      const hay = [r.serial ?? '', r.marca ?? '', r.modelo ?? '', r.unidad_medica ?? '']
+        .some(s => s.toLowerCase().includes(q));
+      return okTipo && hay;
     });
-  });
 
-  // Opciones de filtros
-  readonly tipoOptions: { value: 'ALL' | TipoKey; label: string }[] = [
-    { value: 'ALL', label: 'Todos los Tipos' },
-    { value: 'PC', label: 'Desktop' },
-    { value: 'LAPTOP', label: 'Laptop' },
-    { value: 'IMPRESORA', label: 'Impresora' },
-    { value: 'ROUTER', label: 'Router' },
-    { value: 'SWITCH', label: 'Switch' },
-    { value: 'OTRO', label: 'Otro' },
-  ];
-  readonly estadoOptions: { value: 'ALL' | EstadoKey; label: string }[] = [
-    { value: 'ALL', label: 'Todos los Estados' },
-    { value: 'OPERATIVO', label: 'En Uso' },
-    { value: 'MANTENIMIENTO', label: 'En Reparación' },
-    { value: 'BAJA', label: 'De Baja' },
-    { value: 'EXTRAVIADO', label: 'Extraviado' },
-  ];
+    this.vms.set(filtered.map(r => this.mapRow(r)));
+  }, { allowSignalWrites: true }); // opcional pero útil si el compilador te advierte
 
-  @ViewChild(MatPaginator) paginator!: MatPaginator;
-  @ViewChild(MatSort) sort!: MatSort;
+  ngOnInit(): void {
+    // carga tipos para el filtro
+    this.cat.tiposDispositivo().subscribe(ts => {
+      const opts: { value: string | undefined; label: string; }[] =
+       [{ value: undefined, label: 'Todos los tipos' }];
+      for (const t of ts) opts.push({ value: String(t.id), label: t.nombre });
+      this.tipoOptions.set(opts);
+    });
 
-  ngOnInit() {
-    this.svc.list().subscribe(rows => this.raw.set(rows));
+    // carga inicial del inventario (real)
+    this.load();
   }
 
-  // UI helpers ---------------------------------------------------------------
-
-  iconForTipo(t: TipoKey): string {
-    switch (t) {
-      case 'LAPTOP': return 'laptop';
-      case 'PC': return 'desktop_windows';
-      case 'IMPRESORA': return 'print';
-      case 'ROUTER': return 'router';
-      case 'SWITCH': return 'lan';
-      default: return 'devices_other';
-    }
+  private load() {
+    // Si quieres filtrar por tipo en el server, pásalo aquí:
+    const tipoIdNum = this.tipo() ? Number(this.tipo()) : undefined;
+    this.api.list({ tipo_dispositivo_id: tipoIdNum, q: this.q().trim() || null }).subscribe({
+      next: rows => { this.rows.set(rows ?? []); },
+      error: () => {
+        this.rows.set([]);
+        this.snack.open('No se pudo cargar el inventario', 'Cerrar', { duration: 3000 });
+      }
+    });
   }
 
-  labelForTipo(t: TipoKey): string {
-    switch (t) {
-      case 'LAPTOP': return 'Laptop';
-      case 'PC': return 'Desktop';
-      case 'IMPRESORA': return 'Printer';
-      case 'ROUTER': return 'Router';
-      case 'SWITCH': return 'Switch';
-      default: return 'Otro';
-    }
+  // === Handlers de filtros ===
+  buscar(ev: Event) {
+    const val = (ev.target as HTMLInputElement).value ?? '';
+    this.q.set(val);
+    // Si prefieres filtrar en servidor, llama this.load();
+  }
+  tipoLabel() {
+    const v = this.tipo();
+    return this.tipoOptions().find(o => o.value === v)?.label ?? 'Todos los tipos';
+  }
+  estadoLabel() {
+    return 'Todos los estados'; // placeholder
   }
 
-  estadoView(e: EstadoKey): { label: string; cls: string } {
-    switch (e) {
-      case 'OPERATIVO': return { label: 'En Uso', cls: 'chip--operativo' };
-      case 'MANTENIMIENTO': return { label: 'En Reparación', cls: 'chip--mantenimiento' };
-      case 'BAJA': return { label: 'De Baja', cls: 'chip--baja' };
-      case 'EXTRAVIADO': return { label: 'Extraviado', cls: 'chip--extraviado' };
-    }
+  // === Mapeo row -> VM que espera tu template ===
+  private mapRow(r: DispositivoRow): EquipoVM {
+    return {
+      id: String(r.id),
+      etiqueta: r.serial ?? '—',      // tu UI usaba "etiqueta" como asset tag; mapeo serial
+      serie: r.serial,
+      tipo: r.tipo,                   // label del tipo
+      marca: r.marca,
+      modelo: r.modelo,
+      estado: '—',                    // TODO: estado actual desde historial
+      unidad_id: String(r.unidad_medica_id),
+      ubicacion: r.unidad_medica,     // mostramos nombre de la unidad
+      responsable_id: '—'             // TODO
+    };
   }
 
-  seriePill(r: Equipo) {
-    // Muestra siempre como SN-XXXXX si el valor no lo trae ya con prefijo
-    const v = (r.serie || '').trim();
-    return v.toUpperCase().startsWith('SN-') ? v.toUpperCase() : ('SN-' + v.toUpperCase());
+  // === Helpers de UI ya usados en tu HTML ===
+  filtered = computed(() => this.vms());
+
+  iconForTipo(input: string) {
+    const key = (input || '').toUpperCase();
+    if (key.includes('LAP')) return 'laptop_mac';
+    if (key.includes('PC') || key.includes('CPU') || key.includes('ESCRITORIO')) return 'desktop_windows';
+    if (key.includes('IMP')) return 'print';
+    if (key.includes('ROUT') || key.includes('SWITCH') || key.includes('AP')) return 'device_hub';
+    return 'devices_other';
   }
+  labelForTipo(input: string) { return input || '—'; }
+  seriePill(r: EquipoVM) { return r.serie || '—'; }
+  estadoView(_estado?: string) { return { cls: 'chip--mantenimiento', label: _estado ?? '—' }; } // placeholder
 
-  // Acciones -----------------------------------------------------------------
-
+  // === Acciones ===
   add() {
-    this.dialog.open(EquipoDialog, { width: '720px', data: { mode: 'create' } })
-      .afterClosed().subscribe((res?: Partial<Equipo>) => { if (res) this.svc.create(res as Equipo); });
+    const ref = this.dialog.open(EquipoDialog, {
+      width: '640px',
+      data: null,
+      autoFocus: false
+    });
+    ref.afterClosed().subscribe(ok => { if (ok) this.load(); });
+  }
+  edit(row: EquipoVM) {
+    const ref = this.dialog.open(EquipoDialog, {
+      width: '640px',
+      data: row,
+      autoFocus: false
+    });
+    ref.afterClosed().subscribe(ok => { if (ok) this.load(); });
+  }
+  remove(row: EquipoVM) {
+    // TODO: crear endpoint DELETE /api/dispositivos/:id (aún no lo definimos)
+    this.snack.open('Eliminar: pendiente de acordar endpoint', 'Ok', { duration: 2500 });
   }
 
-  edit(row: Equipo) {
-    this.dialog.open(EquipoDialog, { width: '720px', data: { mode: 'edit', value: row } })
-      .afterClosed().subscribe((res?: Partial<Equipo>) => { if (res) this.svc.update(row.id, res); });
+  exportCSV() {
+    const rows = this.filtered();
+    const head = ['ID', 'Unidad', 'Etiqueta', 'Tipo', 'Marca', 'Modelo', 'Serie'];
+    const csv = [
+      head.join(','),
+      ...rows.map(r => [
+        r.id, r.ubicacion ?? '', r.etiqueta ?? '', r.tipo ?? '', r.marca ?? '', r.modelo ?? '', r.serie ?? ''
+      ].map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(','))
+    ].join('\n');
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'inventario.csv'; a.click();
+    URL.revokeObjectURL(url);
   }
-
-  remove(row: Equipo) { this.svc.remove(row.id); }
-
-  exportCSV() { this.svc.exportCSV(this.filtered()); }
-  exportXLSX() { this.svc.exportXLSX(this.filtered()); }
-
-  buscar(e: Event) { this.q.set((e.target as HTMLInputElement).value); }
-  tipoLabel = computed(() =>
-    this.tipoOptions.find(o => o.value === this.tipo())?.label ?? 'Todos los Tipos'
-  );
-  estadoLabel = computed(() =>
-    this.estadoOptions.find(o => o.value === this.estado())?.label ?? 'Todos los Estados'
-  );
 }

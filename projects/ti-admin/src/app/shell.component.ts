@@ -1,5 +1,6 @@
+// projects/ti-admin/src/app/shell.component.ts
 import { Component, inject, signal, ViewChild } from '@angular/core';
-import { Router, RouterLink, RouterLinkActive, RouterModule } from '@angular/router';
+import { Router, IsActiveMatchOptions, RouterModule } from '@angular/router';
 
 // Material
 import { MatSidenavContainer, MatSidenavModule } from '@angular/material/sidenav';
@@ -42,6 +43,14 @@ export class ShellComponent {
   router = inject(Router);
   auth = inject(AuthClient);
   session = inject(SessionStore);
+  /** Opciones recomendadas para “activo” en elementos de menú */
+  private readonly activeSubset: IsActiveMatchOptions = {
+    // matching de ruta parcial para que /ti/ajustes también marque activo en /ti/ajustes?tab=...
+    paths: 'subset',
+    queryParams: 'subset',
+    fragment: 'ignored',
+    matrixParams: 'ignored',
+  };
 
   // Mini-variant (icon-only)
   collapsed = signal(false);
@@ -76,7 +85,13 @@ export class ShellComponent {
     this.router.navigateByUrl(node.route);
   }
   isActive(node: NavNode) {
-    return node.route ? this.router.isActive(node.route, false) : false;
+    if (!node.route) return false;
+    // Construye UrlTree desde la ruta (usa parseUrl para rutas absolutas)
+    const tree = node.route.startsWith('/')
+      ? this.router.parseUrl(node.route)
+      : this.router.createUrlTree([node.route]);
+    return this.router.isActive(tree, this.activeSubset);
+    // return node.route ? this.router.isActive(node.route, false) : false;
   }
 
 

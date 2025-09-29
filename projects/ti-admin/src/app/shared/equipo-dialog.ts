@@ -6,7 +6,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { CommonModule } from '@angular/common';
-import { Equipo } from '../services/ti.service';
+import { Equipo } from '../models';
 
 type DialogData = { mode: 'create'|'edit'; value?: Partial<Equipo> };
 

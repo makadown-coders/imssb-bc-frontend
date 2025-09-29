@@ -22,14 +22,14 @@
   <mat-form-field appearance="fill" class="filter">
     <mat-select [value]="tipo()" (valueChange)="tipo.set($event)">
       <mat-select-trigger>{{ tipoLabel() }}</mat-select-trigger>
-      <mat-option *ngFor="let o of tipoOptions" [value]="o.value">{{ o.label }}</mat-option>
+      <mat-option *ngFor="let o of tipoOptions()" [value]="o.value">{{ o.label }}</mat-option>
     </mat-select>
   </mat-form-field>
 
   <mat-form-field appearance="fill" class="filter">
     <mat-select [value]="estado()" (valueChange)="estado.set($event)">
       <mat-select-trigger>{{ estadoLabel() }}</mat-select-trigger>
-      <mat-option *ngFor="let o of estadoOptions" [value]="o.value">{{ o.label }}</mat-option>
+      <mat-option *ngFor="let o of estadoOptions()" [value]="o.value">{{ o.label }}</mat-option>
     </mat-select>
   </mat-form-field>
 </section>

@@ -1,0 +1,136 @@
+<!-- projects/ti-admin/src/app/pages/catalogos.page.html -->
+<section class="inv-header">
+  <div class="inv-title">
+    <h2 class="mat-headline-small">Catálogos</h2>
+    <p class="mat-body-medium">Municipios, Localidades, Tipos de Unidad, Unidades Médicas, Tipos/Estados de Dispositivo.</p>
+  </div>
+</section>
+
+<mat-tab-group animationDuration="200ms">
+
+  <!-- Municipios -->
+  <mat-tab label="Municipios">
+    <div class="inv-card mat-elevation-z2" style="padding:12px;">
+      <table mat-table [dataSource]="municipios()" class="inv-table">
+        <ng-container matColumnDef="id"><th mat-header-cell *matHeaderCellDef>ID</th><td mat-cell *matCellDef="let r">{{r.id}}</td></ng-container>
+        <ng-container matColumnDef="nombre"><th mat-header-cell *matHeaderCellDef>Nombre</th><td mat-cell *matCellDef="let r">{{r.nombre_municipio}}</td></ng-container>
+        <tr mat-header-row *matHeaderRowDef="['id','nombre']"></tr>
+        <tr mat-row *matRowDef="let row; columns: ['id','nombre'];"></tr>
+      </table>
+    </div>
+  </mat-tab>
+
+  <!-- Localidades -->
+  <mat-tab label="Localidades">
+    <div class="inv-filters" style="margin-bottom:8px;">
+      <mat-form-field appearance="fill" class="filter">
+        <mat-select [value]="fMunicipio()" (valueChange)="fMunicipio.set($event)" placeholder="Municipio">
+          <mat-option [value]="undefined">Todos</mat-option>
+          <mat-option *ngFor="let m of municipios()" [value]="m.id">{{ m.nombre_municipio }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+
+    <div class="inv-card mat-elevation-z2" style="padding:12px;">
+      <table mat-table [dataSource]="localidades()" class="inv-table">
+        <ng-container matColumnDef="id"><th mat-header-cell *matHeaderCellDef>ID</th><td mat-cell *matCellDef="let r">{{r.id}}</td></ng-container>
+        <ng-container matColumnDef="nombre"><th mat-header-cell *matHeaderCellDef>Localidad</th><td mat-cell *matCellDef="let r">{{r.nombre_localidad}}</td></ng-container>
+        <tr mat-header-row *matHeaderRowDef="['id','nombre']"></tr>
+        <tr mat-row *matRowDef="let row; columns: ['id','nombre'];"></tr>
+      </table>
+    </div>
+  </mat-tab>
+
+  <!-- Tipos de Unidad -->
+  <mat-tab label="Tipos de Unidad">
+    <div class="inv-card mat-elevation-z2" style="padding:12px;">
+      <table mat-table [dataSource]="tiposUnidad()" class="inv-table">
+        <ng-container matColumnDef="id"><th mat-header-cell *matHeaderCellDef>ID</th><td mat-cell *matCellDef="let r">{{r.id}}</td></ng-container>
+        <ng-container matColumnDef="nombre"><th mat-header-cell *matHeaderCellDef>Tipo</th><td mat-cell *matCellDef="let r">{{r.nombre_tipo}}</td></ng-container>
+        <tr mat-header-row *matHeaderRowDef="['id','nombre']"></tr>
+        <tr mat-row *matRowDef="let row; columns: ['id','nombre'];"></tr>
+      </table>
+    </div>
+  </mat-tab>
+
+  <!-- Unidades Médicas -->
+  <mat-tab label="Unidades Médicas">
+    <div class="inv-filters" style="gap:8px; margin-bottom:8px;">
+      <mat-form-field appearance="fill" class="filter">
+        <mat-select [value]="fMunicipio()" (valueChange)="fMunicipio.set($event)" placeholder="Municipio">
+          <mat-option [value]="undefined">Todos</mat-option>
+          <mat-option *ngFor="let m of municipios()" [value]="m.id">{{ m.nombre_municipio }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="fill" class="filter">
+        <mat-select [value]="fLocalidad()" (valueChange)="fLocalidad.set($event)" placeholder="Localidad">
+          <mat-option [value]="undefined">Todas</mat-option>
+          <mat-option *ngFor="let l of localidades()" [value]="l.id">{{ l.nombre_localidad }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="fill" class="filter">
+        <mat-select [value]="fTipoUnidad()" (valueChange)="fTipoUnidad.set($event)" placeholder="Tipo de Unidad">
+          <mat-option [value]="undefined">Todos</mat-option>
+          <mat-option *ngFor="let t of tiposUnidad()" [value]="t.id">{{ t.nombre_tipo }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="fill" class="filter search">
+        <mat-icon matPrefix>search</mat-icon>
+        <input matInput placeholder="Buscar por nombre o CLUES" [value]="q()"
+         (input)="buscarUnidades($event)" />
+      </mat-form-field>
+
+      <button mat-button (click)="clearFilters()"><mat-icon>filter_alt_off</mat-icon>Limpiar</button>
+    </div>
+
+    <div class="inv-card mat-elevation-z2" style="padding:12px; position:relative;">
+      <div *ngIf="loadingUnidades()" class="mat-body-medium" style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center;">
+        <mat-progress-spinner diameter="28" mode="indeterminate"></mat-progress-spinner>
+      </div>
+
+      <table mat-table [dataSource]="unidades()" class="inv-table">
+        <ng-container matColumnDef="id"><th mat-header-cell *matHeaderCellDef>ID</th><td mat-cell *matCellDef="let r">{{r.id}}</td></ng-container>
+        <ng-container matColumnDef="nombre"><th mat-header-cell *matHeaderCellDef>Unidad</th><td mat-cell *matCellDef="let r">{{r.nombre}}</td></ng-container>
+        <ng-container matColumnDef="cluessa"><th mat-header-cell *matHeaderCellDef>CLUESSA</th><td mat-cell *matCellDef="let r">{{r.cluessa || '—'}}</td></ng-container>
+        <ng-container matColumnDef="cluesimb"><th mat-header-cell *matHeaderCellDef>CLUES IMB</th><td mat-cell *matCellDef="let r">{{r.cluesimb || '—'}}</td></ng-container>
+        <ng-container matColumnDef="tipo"><th mat-header-cell *matHeaderCellDef>Tipo</th><td mat-cell *matCellDef="let r">{{r.tipo_unidad || '—'}}</td></ng-container>
+        <ng-container matColumnDef="municipio"><th mat-header-cell *matHeaderCellDef>Municipio</th><td mat-cell *matCellDef="let r">{{r.municipio || '—'}}</td></ng-container>
+        <ng-container matColumnDef="localidad"><th mat-header-cell *matHeaderCellDef>Localidad</th><td mat-cell *matCellDef="let r">{{r.localidad || '—'}}</td></ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedUnidades"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedUnidades;"></tr>
+      </table>
+
+      <mat-paginator [length]="total()" [pageIndex]="pageIndex()" [pageSize]="pageSize()"
+                     [pageSizeOptions]="[10,20,50,100]" (page)="onPage($event)"></mat-paginator>
+    </div>
+  </mat-tab>
+
+  <!-- Tipos de Dispositivo -->
+  <mat-tab label="Tipos de Dispositivo">
+    <div class="inv-card mat-elevation-z2" style="padding:12px;">
+      <table mat-table [dataSource]="tiposDispositivo()" class="inv-table">
+        <ng-container matColumnDef="id"><th mat-header-cell *matHeaderCellDef>ID</th><td mat-cell *matCellDef="let r">{{r.id}}</td></ng-container>
+        <ng-container matColumnDef="nombre"><th mat-header-cell *matHeaderCellDef>Tipo</th><td mat-cell *matCellDef="let r">{{r.nombre}}</td></ng-container>
+        <tr mat-header-row *matHeaderRowDef="['id','nombre']"></tr>
+        <tr mat-row *matRowDef="let row; columns: ['id','nombre'];"></tr>
+      </table>
+    </div>
+  </mat-tab>
+
+  <!-- Estados de Dispositivo -->
+  <mat-tab label="Estados de Dispositivo">
+    <div class="inv-card mat-elevation-z2" style="padding:12px;">
+      <table mat-table [dataSource]="estadosDispositivo()" class="inv-table">
+        <ng-container matColumnDef="id"><th mat-header-cell *matHeaderCellDef>ID</th><td mat-cell *matCellDef="let r">{{r.id}}</td></ng-container>
+        <ng-container matColumnDef="nombre"><th mat-header-cell *matHeaderCellDef>Estado</th><td mat-cell *matCellDef="let r">{{r.nombre}}</td></ng-container>
+        <tr mat-header-row *matHeaderRowDef="['id','nombre']"></tr>
+        <tr mat-row *matRowDef="let row; columns: ['id','nombre'];"></tr>
+      </table>
+    </div>
+  </mat-tab>
+
+</mat-tab-group>

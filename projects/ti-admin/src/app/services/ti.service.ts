@@ -1,21 +1,9 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
+import { Equipo } from '../models/Equipo';
 // TODO: conectar a HttpClient con base en API_URL de env.json (pendiente de acordar contrato)
 
-export type Equipo = {
-  id: string;
-  etiqueta: string;
-  serie?: string;
-  tipo: 'PC'|'LAPTOP'|'IMPRESORA'|'ROUTER'|'SWITCH'|'OTRO';
-  marca?: string;
-  modelo?: string;
-  estado: 'OPERATIVO'|'MANTENIMIENTO'|'BAJA'|'EXTRAVIADO';
-  unidad_id?: string;
-  ubicacion?: string;
-  responsable_id?: string;
-  fecha_alta?: string;
-  notas?: string;
-};
+
 
 @Injectable({ providedIn: 'root' })
 export class TiService {
