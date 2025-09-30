@@ -10,3 +10,5 @@ export * from './Page';
 export * from './TipoDispositivo';
 export * from './TipoUnidad';
 export * from './UnidadMedica';
+export * from './DispositivoRowEx';
+export * from './SelectOpt';

@@ -1,8 +1,9 @@
-import { Component, OnInit, inject, ViewChild, computed, signal, effect } from '@angular/core';
+// projects/ti-admin/src/app/pages/inventario.page.ts
+import { Component, OnInit, inject, ViewChild, computed, signal, effect, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatTableModule } from '@angular/material/table';
-import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
+import { MatPaginator, MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -19,10 +20,12 @@ import { EquipoDialog } from '../shared/equipo-dialog';
 import { Equipo } from '../models/Equipo';
 import { EstadoKey } from '../models/EstadoKey';
 import { TipoKey } from '../models/TipoKey';
-import { DispositivoRow, EquipoVM, TipoDispositivo } from '../models';
+import { DispositivoRow, EquipoVM, EstadoDispositivo, Page, SelectOpt, TipoDispositivo } from '../models';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { CatalogosService } from '../services/catalogos.service';
 import { DispositivosService } from '../services/dispositivos.service';
+import { DispositivoRowEx } from '../models/DispositivoRowEx';
+import { BehaviorSubject, pipe, Subject, takeUntil } from 'rxjs';
 
 @Component({
   standalone: true,
@@ -32,107 +35,171 @@ import { DispositivosService } from '../services/dispositivos.service';
     MatTableModule, MatPaginatorModule, MatSortModule,
     MatFormFieldModule, MatInputModule, MatButtonModule, MatIconModule,
     MatSelectModule, MatMenuModule, MatTooltipModule, MatDividerModule, MatRippleModule,
-    MatDialogModule, MatSnackBarModule
+    MatDialogModule, MatSnackBarModule,
   ],
   templateUrl: './inventario.page.html',
   styleUrls: ['./inventario.page.scss']
 })
-export class InventarioPage implements OnInit {
+export class InventarioPage implements OnInit, OnDestroy {
+
   private api = inject(DispositivosService);
   private cat = inject(CatalogosService);
   private dialog = inject(MatDialog);
   private snack = inject(MatSnackBar);
 
-  // dataset real (crudo) y view-model
-  rows = signal<DispositivoRow[]>([]);
+  // dataset de la página actual (viene del servidor)
+  items = signal<DispositivoRowEx[]>([]);
   vms = signal<EquipoVM[]>([]);
+  total = signal(0);
 
-  // filtros UI (mantengo tu UI actual)
+  // filtros UI
   q = signal<string>('');
-  tipo = signal<string | undefined>(undefined);   // value = id en string o undefined
-  estado = signal<string | undefined>(undefined); // NO-OP por ahora
+  tipo = signal<string | undefined>(undefined);    // id en string
+  estado = signal<string | undefined>(undefined);    // id en string
 
-  // opciones de selects
-  tipoOptions = signal<{ value: string | undefined; label: string; }[]>([{ value: undefined, label: 'Todos los tipos' }]);
-  estadoOptions = signal<{ value: string | undefined; label: string; }[]>([
-    { value: undefined, label: 'Todos los estados' } // hasta que definamos historial/estado actual
-  ]);
+  // paginación server-side
+  pageIndex = signal(0);
+  pageSize = signal(20);
+
+  // 🔹 Opciones de selects (como signals)
+  tipoOptions = signal<SelectOpt[]>([{ value: undefined, label: 'Todos los tipos' }]);
+  estadoOptions = signal<SelectOpt[]>([{ value: undefined, label: 'Todos los estados' }]);
+  // (opcional) un icono por defecto cuando es "Todos los tipos"
+  public readonly defaultTipoIcon = 'devices_other';
 
   displayedColumns = ['tipo', 'modelo', 'serie', 'ubicacion', 'responsable', 'estado', 'acciones'];
 
-  // 👇 crea el effect como campo de clase (esto SÍ tiene injection context)
-  private readonly _syncVMs = effect(() => {
-    const all = this.rows();
-    const q = this.q().trim().toLowerCase();
-    const tipoId = this.tipo();
-
-    const filtered = all.filter(r => {
-      const okTipo = !tipoId || tipoId === String((r as any).tipo_dispositivo_id ?? '');
-      const hay = [r.serial ?? '', r.marca ?? '', r.modelo ?? '', r.unidad_medica ?? '']
-        .some(s => s.toLowerCase().includes(q));
-      return okTipo && hay;
-    });
-
-    this.vms.set(filtered.map(r => this.mapRow(r)));
-  }, { allowSignalWrites: true }); // opcional pero útil si el compilador te advierte
+  $onDestroy = new Subject<void>();
 
   ngOnInit(): void {
-    // carga tipos para el filtro
-    this.cat.tiposDispositivo().subscribe(ts => {
-      const opts: { value: string | undefined; label: string; }[] =
-       [{ value: undefined, label: 'Todos los tipos' }];
-      for (const t of ts) opts.push({ value: String(t.id), label: t.nombre });
+    // Cargar opciones de Tipo
+    this.cat.tiposDispositivo().pipe(
+      takeUntil(this.$onDestroy)
+    ).subscribe((ts: TipoDispositivo[]) => {
+      const opts: SelectOpt[] = [
+        { value: undefined, label: 'Todos los tipos' },
+        ...ts.map<SelectOpt>(t => ({ value: String(t.id), label: t.nombre }))
+      ];
+      console.log('this.tipoOptions', opts);
       this.tipoOptions.set(opts);
     });
 
-    // carga inicial del inventario (real)
-    this.load();
+    // Cargar opciones de Estado
+    this.cat.estadosDispositivo().pipe(
+      takeUntil(this.$onDestroy)
+    ).subscribe((es: EstadoDispositivo[]) => {
+      const opts: SelectOpt[] = [
+        { value: undefined, label: 'Todos los estados' },
+        ...es.map<SelectOpt>(e => ({ value: String(e.id), label: e.nombre }))
+      ];
+      this.estadoOptions.set(opts);
+    });
+    // Efecto: cuando cambian q/tipo/página/tamaño -> pedir al servidor
+    // aqui se invoca automaticamente this._loadEffect();
   }
 
-  private load() {
-    // Si quieres filtrar por tipo en el server, pásalo aquí:
-    const tipoIdNum = this.tipo() ? Number(this.tipo()) : undefined;
-    this.api.list({ tipo_dispositivo_id: tipoIdNum, q: this.q().trim() || null }).subscribe({
-      next: rows => { this.rows.set(rows ?? []); },
+  getTipoOpt() {
+    const v = this.tipo();
+    return this.tipoOptions().find(o => o.value === v);
+  }   
+
+  private _norm(s?: string) {
+    return (s ?? '')
+      .normalize('NFD').replace(/\p{Diacritic}/gu, '')
+      .toUpperCase();
+  }
+
+  // Icono para mostrar en selects/tabla
+  iconForEstado(label?: string) {
+    const t = this._norm(label);
+    if (t.includes('USO')) return 'check_circle';  // En Uso
+    if (t.includes('REPAR')) return 'build';         // En Reparación
+    if (t.includes('RESGU')) return 'inventory_2';   // En Resguardo (almacenado)
+    return 'help';
+  }
+
+  // Chip (clase + label + icono) para la tabla
+  estadoView(label?: string): { cls: string; label: string; icon: string } {
+    const raw = (label ?? '').trim();
+    const t = this._norm(raw);
+
+    if (t.includes('USO')) return { cls: 'chip--uso', label: raw || 'En Uso', icon: 'check_circle' };
+    if (t.includes('REPAR')) return { cls: 'chip--reparacion', label: raw || 'En Reparación', icon: 'build' };
+    if (t.includes('RESGU')) return { cls: 'chip--resguardo', label: raw || 'En Resguardo', icon: 'inventory_2' };
+
+    return { cls: 'chip--desconocido', label: raw || '—', icon: 'help' };
+  }
+
+  // ✅ effect como propiedad de la clase (injection context OK)
+  private readonly _loadEffect = effect(() => {
+    console.log('InventarioPage: _loadEffect disparado');
+    // leer señales
+    const page = this.pageIndex() + 1;
+    const pageSize = this.pageSize();
+    const q = this.q().trim() || null;
+    const tipoId = this.tipo() ? Number(this.tipo()) : null;
+    const estadoId = this.estado() ? Number(this.estado()) : null;
+
+    this.api.list({
+      q,
+      tipo_dispositivo_id: tipoId ?? undefined,
+      estado_dispositivo_id: estadoId ?? undefined,
+      page,
+      pageSize
+    }).pipe(
+      takeUntil(this.$onDestroy)
+    ).subscribe({
+      next: (r: Page<DispositivoRowEx>) => {
+        this.items.set(r.items ?? []);
+        this.total.set(r.total ?? 0);
+        this.vms.set((r.items ?? []).map(row => this.mapRow(row)));
+      },
       error: () => {
-        this.rows.set([]);
-        this.snack.open('No se pudo cargar el inventario', 'Cerrar', { duration: 3000 });
+        this.items.set([]); this.total.set(0); this.vms.set([]);
       }
     });
+  }, { allowSignalWrites: true });
+
+  // resetear a la primera página cuando cambian filtros
+  private readonly _resetPageOnFilter = effect(() => {
+    this.q(); this.tipo(); this.estado();
+    this.pageIndex.set(0);
+  }, { allowSignalWrites: true });
+
+  onPage(e: PageEvent) {
+    this.pageIndex.set(e.pageIndex);
+    this.pageSize.set(e.pageSize);
   }
 
-  // === Handlers de filtros ===
   buscar(ev: Event) {
     const val = (ev.target as HTMLInputElement).value ?? '';
     this.q.set(val);
-    // Si prefieres filtrar en servidor, llama this.load();
   }
   tipoLabel() {
     const v = this.tipo();
-    return this.tipoOptions().find(o => o.value === v)?.label ?? 'Todos los tipos';
+    const opt = this.tipoOptions().find(o => o.value === v);
+    if (opt && opt.label && opt.label.trim().length > 0) return opt.label;
+    return 'Todos los tipos';
   }
   estadoLabel() {
-    return 'Todos los estados'; // placeholder
+    const v = this.estado();
+    return this.estadoOptions().find(o => o.value === v)?.label ?? 'Todos los estados';
   }
 
-  // === Mapeo row -> VM que espera tu template ===
-  private mapRow(r: DispositivoRow): EquipoVM {
+  private mapRow(r: DispositivoRowEx): EquipoVM {
     return {
       id: String(r.id),
-      etiqueta: r.serial ?? '—',      // tu UI usaba "etiqueta" como asset tag; mapeo serial
+      etiqueta: r.serial ?? '—',
       serie: r.serial,
-      tipo: r.tipo,                   // label del tipo
+      tipo: r.tipo,
       marca: r.marca,
       modelo: r.modelo,
-      estado: '—',                    // TODO: estado actual desde historial
+      estado: r.estado_dispositivo ?? '—',
       unidad_id: String(r.unidad_medica_id),
-      ubicacion: r.unidad_medica,     // mostramos nombre de la unidad
-      responsable_id: '—'             // TODO
+      ubicacion: r.unidad_medica,
+      responsable_id: r.persona_nombre_completo || r.lugar_especifico || '—'
     };
   }
-
-  // === Helpers de UI ya usados en tu HTML ===
-  filtered = computed(() => this.vms());
 
   iconForTipo(input: string) {
     const key = (input || '').toUpperCase();
@@ -143,45 +210,46 @@ export class InventarioPage implements OnInit {
     return 'devices_other';
   }
   labelForTipo(input: string) { return input || '—'; }
-  seriePill(r: EquipoVM) { return r.serie || '—'; }
-  estadoView(_estado?: string) { return { cls: 'chip--mantenimiento', label: _estado ?? '—' }; } // placeholder
+  seriePill(r: EquipoVM) { return r.serie || '—'; }  
 
-  // === Acciones ===
+  // Acciones
   add() {
-    const ref = this.dialog.open(EquipoDialog, {
-      width: '640px',
-      data: null,
-      autoFocus: false
-    });
-    ref.afterClosed().subscribe(ok => { if (ok) this.load(); });
+    const ref = this.dialog.open(EquipoDialog, { width: '640px', data: null, autoFocus: false });
+    ref.afterClosed().subscribe(ok => { if (ok) this.pageIndex.set(0); }); // para ver el nuevo en la primera página
   }
   edit(row: EquipoVM) {
-    const ref = this.dialog.open(EquipoDialog, {
-      width: '640px',
-      data: row,
-      autoFocus: false
-    });
-    ref.afterClosed().subscribe(ok => { if (ok) this.load(); });
+    const ref = this.dialog.open(EquipoDialog, { width: '640px', data: row, autoFocus: false });
+    ref.afterClosed().subscribe(ok => { if (ok) this._reload(); });
   }
-  remove(row: EquipoVM) {
-    // TODO: crear endpoint DELETE /api/dispositivos/:id (aún no lo definimos)
+  remove(_row: EquipoVM) {
     this.snack.open('Eliminar: pendiente de acordar endpoint', 'Ok', { duration: 2500 });
   }
 
+  // Helper para refrescar manteniendo page/pageSize
+  private _reload() {
+    // tocar una señal usada por el effect para re-dispararlo:
+    this.pageIndex.set(this.pageIndex());
+  }
+
+  // Para exportar SOLO la página visible (coherente con paginación server-side)
   exportCSV() {
-    const rows = this.filtered();
-    const head = ['ID', 'Unidad', 'Etiqueta', 'Tipo', 'Marca', 'Modelo', 'Serie'];
+    const rows = this.vms();
+    const head = ['ID', 'Unidad', 'Etiqueta', 'Tipo', 'Marca', 'Modelo', 'Serie', 'Estado', 'Responsable/Lugar'];
     const csv = [
       head.join(','),
       ...rows.map(r => [
-        r.id, r.ubicacion ?? '', r.etiqueta ?? '', r.tipo ?? '', r.marca ?? '', r.modelo ?? '', r.serie ?? ''
+        r.id, r.ubicacion ?? '', r.etiqueta ?? '', r.tipo ?? '', r.marca ?? '', r.modelo ?? '', r.serie ?? '',
+        r.estado ?? '', r.responsable_id ?? ''
       ].map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(','))
     ].join('\n');
-
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = 'inventario.csv'; a.click();
+    const a = document.createElement('a'); a.href = url; a.download = 'inventario_pagina.csv'; a.click();
     URL.revokeObjectURL(url);
+  }
+
+  ngOnDestroy(): void {
+    this.$onDestroy.next();
+    this.$onDestroy.complete();
   }
 }

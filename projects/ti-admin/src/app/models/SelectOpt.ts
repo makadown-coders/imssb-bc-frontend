@@ -1,0 +1,1 @@
+export type SelectOpt = { value: string | undefined; label: string };
