@@ -1,3 +1,5 @@
+/* /styles/_brand.scss */
+
 @use '@angular/material' as mat;
 
 /* Paletas */
@@ -17,6 +19,10 @@ $theme-dark: mat.define-theme((color: (theme-type: dark, primary: $primary, tert
     /* ===== LIGHT ===== */
     :root {
         @include mat.all-component-themes($theme-light);
+
+        --bg-overlay-from: rgba(255, 255, 255, .85);
+        --bg-overlay-to: rgba(173, 210, 190, .85);
+        /* #add2be con alpha */
 
         /* Fondo del body (gradiente corporativo) */
         --bg-grad-top: #ffffff;
@@ -139,11 +145,62 @@ $theme-dark: mat.define-theme((color: (theme-type: dark, primary: $primary, tert
             border: 1px solid var(--surface-border);
             backdrop-filter: blur(6px);
         }
+
+        .mat-mdc-dialog-container {
+            /* Fondo/texto del contenido del modal */
+            --mdc-dialog-container-color: var(--surface-1);
+            color: var(--text-strong);
+        }
+
+        /* Asegura que la superficie del MDC use el token */
+        .mat-mdc-dialog-container .mdc-dialog__surface {
+            background: var(--mdc-dialog-container-color) !important;
+            color: inherit;
+        }
+
+        /* Backdrop un poco más notorio */
+        .cdk-overlay-backdrop.cdk-overlay-backdrop-showing {
+            background: rgba(0, 0, 0, .42);
+        }
+
+        /* === Tabs en dialog (LIGHT) === */
+        :root {
+            --mat-tab-header-active-label-text-color: var(--text-strong);
+            --mat-tab-header-inactive-label-text-color: var(--text-muted);
+            --mat-tab-header-active-indicator-color: var(--brand-btn-bg);
+            /* verde marca */
+            --mat-tab-header-disabled-label-text-color: rgba(0, 0, 0, .38);
+        }
+
+        .mat-mdc-tab-group,
+        .mat-mdc-tab-nav-bar {
+            background: transparent;
+        }
+
+        /* === Menú y Select dentro de overlays (LIGHT) === */
+        .mat-mdc-select-panel {
+            background-color: var(--surface-1) !important;
+            color: var(--text-strong) !important;
+            border: 1px solid var(--surface-border);
+            backdrop-filter: blur(6px);
+        }
+
+        .mat-mdc-option,
+        .mat-mdc-option .mdc-list-item__primary-text {
+            color: var(--text-strong) !important;
+        }
+
+        .mdc-list-item--selected .mdc-list-item__primary-text {
+            font-weight: 600;
+        }
     }
 
     /* ===== DARK ===== */
     body.dark-theme {
         @include mat.all-component-colors($theme-dark);
+
+        --bg-overlay-from: rgba(0, 0, 0, .45);
+        --bg-overlay-to: rgba(0, 0, 0, .65);
 
         --bg-grad-top: #0b3a2c;
         --bg-grad-bottom: #134b3a;
@@ -384,6 +441,87 @@ $theme-dark: mat.define-theme((color: (theme-type: dark, primary: $primary, tert
         .mdc-list-item--selected .mdc-list-item__primary-text {
             font-weight: 600;
         }
+
+        .mat-mdc-dialog-container {
+            background-color: #2e3b2e; // verde oscuro institucional
+            color: #f5f5f5; // texto claro
+        }
+
+        .mat-mdc-tab-group,
+        .mat-mdc-tab-nav-bar {
+            background-color: transparent;
+        }
+
+        .mat-mdc-dialog-container {
+            /* usa tu surface oscura translúcida para efecto “glass” congruente */
+            --mdc-dialog-container-color: var(--surface-1);
+            color: var(--text-strong);
+        }
+
+        .mat-mdc-dialog-container .mdc-dialog__surface {
+            background: var(--mdc-dialog-container-color) !important;
+            color: inherit;
+        }
+
+        /* Backdrop un poco más tenue para no lavar el contenido */
+        .cdk-overlay-backdrop.cdk-overlay-backdrop-showing {
+            background: rgba(0, 0, 0, .56);
+        }
+
+        /* Divisores dentro del dialog */
+        .mat-mdc-dialog-container .mat-divider,
+        .mat-mdc-dialog-container .mat-mdc-divider {
+            border-color: var(--surface-border) !important;
+        }
+
+        /* === Tabs en dialog (DARK) === */
+        body.dark-theme {
+            --mat-tab-header-active-label-text-color: var(--text-strong);
+            --mat-tab-header-inactive-label-text-color: var(--text-muted);
+            --mat-tab-header-active-indicator-color: var(--imssb-gold);
+            /* acento dorado */
+            --mat-tab-header-disabled-label-text-color: rgba(255, 255, 255, .35);
+        }
+
+        .mat-mdc-tab-group,
+        .mat-mdc-tab-nav-bar {
+            background: transparent;
+        }
+
+        /* Labels de pestañas más legibles */
+        .mat-mdc-tab-header .mdc-tab__text-label {
+            color: var(--mat-tab-header-inactive-label-text-color);
+        }
+
+        .mat-mdc-tab.mdc-tab--active .mdc-tab__text-label {
+            color: var(--mat-tab-header-active-label-text-color);
+        }
+
+        /* === Menú y Select dentro de overlays (DARK) === */
+        .mat-mdc-select-panel {
+            /* panel semitransparente con blur */
+            background-color: rgba(0, 0, 0, .54) !important;
+            color: var(--text-strong) !important;
+            border: 1px solid var(--surface-border);
+            backdrop-filter: blur(6px);
+        }
+
+        .mat-mdc-option,
+        .mat-mdc-option .mdc-list-item__primary-text {
+            color: var(--text-strong) !important;
+        }
+
+        .mdc-list-item--selected .mdc-list-item__primary-text {
+            font-weight: 600;
+        }
+
+        /* Menú contextual (mat-menu) coherente con oscuro */
+        .mat-mdc-menu-panel {
+            background-color: var(--menu-bg) !important;
+            color: var(--text-strong) !important;
+            border: 1px solid var(--surface-border);
+            backdrop-filter: blur(6px);
+        }
     }
 
     /* Reset + fuente + color global de texto */
@@ -407,6 +545,8 @@ $theme-dark: mat.define-theme((color: (theme-type: dark, primary: $primary, tert
         align-items: center;
         justify-content: center;
         padding: 24px;
+        /* 🔧 clave para que el padding NO aumente la altura total */
+        box-sizing: border-box;
     }
 
     /* más específico que .mat-mdc-card */
@@ -662,4 +802,299 @@ $theme-dark: mat.define-theme((color: (theme-type: dark, primary: $primary, tert
     .inv-table .cell-model .sub {
         color: var(--text-muted);
     }
+
+    .row-click {
+        cursor: pointer;
+    }
+
+
+    .inv-header {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        justify-content: space-between;
+        margin: 6px 0 12px;
+
+        .inv-title p {
+            color: var(--brand-text-muted, rgba(0, 0, 0, 0.6));
+            margin: 4px 0 0;
+        }
+
+        .inv-actions button span {
+            margin-left: 6px;
+        }
+    }
+
+    .inv-filters {
+        display: grid;
+        grid-template-columns: 1fr 220px 220px;
+        gap: 12px;
+        margin: 0 0 12px;
+
+        .filter.search .mdc-text-field--filled {
+            border-radius: 12px;
+        }
+    }
+
+    .inv-card {
+        border-radius: 12px;
+        background: var(--brand-surface, #fff);
+        box-shadow:
+            0 1px 2px rgba(0, 0, 0, 0.04),
+            0 8px 24px rgba(0, 0, 0, 0.06);
+        overflow: hidden;
+    }
+
+    /* Tabla */
+    .inv-table {
+        width: 100%;
+
+        th {
+            color: var(--brand-text-muted, rgba(0, 0, 0, 0.6));
+            font-weight: 600;
+        }
+
+        .mat-mdc-row {
+            border-top: 1px solid var(--brand-border, #e7ebef);
+        }
+
+        .mat-mdc-row:hover {
+            background: var(--brand-row-hover, #f7fbf9);
+        }
+
+        .th-actions,
+        .td-actions {
+            text-align: right;
+        }
+    }
+
+    /* Celdas */
+    .cell-type {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .type-icon {
+        color: var(--brand-primary, #006341);
+    }
+
+    .cell-model .model {
+        font-weight: 600;
+    }
+
+    .cell-model .sub {
+        color: var(--brand-text-muted, rgba(0, 0, 0, 0.6));
+        font-size: 12px;
+    }
+
+    /* Pill de serie */
+    .badge-serial {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.2px;
+        background: var(--serial-bg, #E6F4EA);
+        color: var(--serial-fg, #0F5132);
+        border: 1px solid var(--serial-border, #CFE8D5);
+    }
+
+    /* Chips de estado */
+    .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 2px 10px;
+        border-radius: 9999px;
+        border: 1px solid var(--table-border);
+        font-weight: 600;
+    }
+
+    .chip-icn {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+        line-height: 18px;
+    }
+
+
+    /* Responsivo simple */
+    @media (max-width: 960px) {
+        .inv-filters {
+            grid-template-columns: 1fr;
+        }
+
+        .inv-header {
+            align-items: start;
+            flex-direction: column;
+            gap: 8px;
+        }
+    }
+
+    /* === Forzar contraste en Inventario (oscuro y claro) === */
+    .inv-title .mat-headline-small {
+        color: var(--text-strong) !important;
+    }
+
+    .inv-title .mat-body-medium {
+        color: var(--text-muted) !important;
+    }
+
+    /* Tabla */
+    .inv-table .mat-mdc-header-cell,
+    .inv-table .mat-mdc-header-row {
+        color: var(--text-strong) !important;
+    }
+
+    .inv-table .mat-mdc-cell {
+        color: var(--text-strong) !important;
+    }
+
+    .inv-table .cell-model .sub {
+        color: var(--text-muted) !important;
+    }
+
+    .inv-table .type-label {
+        color: var(--text-strong) !important;
+    }
+
+    /* Icono de tipo un poco más visible en oscuro */
+    body.dark-theme .inv-table .type-icon {
+        color: #b7ebd0 !important;
+    }
+
+    /* Serie (pill) más legible en oscuro */
+    body.dark-theme .badge-serial {
+        background: rgba(186, 230, 201, .20);
+        color: #E7F7EE;
+        border-color: rgba(186, 230, 201, .35);
+    }
+
+    /* Chips en oscuro con más contraste */
+    body.dark-theme .chip--operativo {
+        background: rgba(46, 139, 87, .24);
+        color: #B7EBD0;
+    }
+
+    body.dark-theme .chip--operativo .dot {
+        background: #6EE7B7;
+    }
+
+    body.dark-theme .chip--mantenimiento {
+        background: rgba(203, 161, 53, .22);
+        color: #F9E3BA;
+    }
+
+    body.dark-theme .chip--mantenimiento .dot {
+        background: #F5D48A;
+    }
+
+    /* Evita que algo externo baje la opacidad de filas */
+    .inv-table .mat-mdc-row,
+    .inv-table .mat-mdc-cell,
+    .inv-table .mat-mdc-header-cell {
+        opacity: 1 !important;
+    }
+
+    .filter .opt-icon {
+        font-size: 20px;
+        width: 20px;
+        height: 20px;
+        margin-right: 8px;
+        vertical-align: middle;
+    }
+
+    /* Opcional: da un poco de espacio a las opciones con icono */
+    .filter .mat-mdc-option .opt-label {
+        vertical-align: middle;
+    }
+
+    /* Contenedor del surface del dialog (usa la clase del panel) */
+    .ti-detail-dialog .mdc-dialog__surface {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        /* respeta height enviado en MatDialogConfig */
+    }
+
+    /* La cabecera que ya tienes no crece */
+    .ti-detail-dialog .detail-header {
+        flex: 0 0 auto;
+    }
+
+    /* El “cuerpo” del dialog ocupa el resto del alto */
+    .ti-detail-dialog .dd-content {
+        flex: 1 1 auto;
+        min-height: 0;
+        /* clave para que funcione overflow */
+        overflow: hidden;
+        /* el scroll lo hacen las tabs */
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* Divider pegajoso (opcional) */
+    .ti-detail-dialog .dd-divider {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        background: var(--mdc-dialog-container-color);
+    }
+
+    /* El grupo de tabs llena el alto del content */
+    .ti-detail-dialog .dd-tabs {
+        flex: 1 1 auto;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .ti-detail-dialog .dd-tabs .mat-mdc-tab-header {
+        flex: 0 0 auto;
+    }
+
+    .ti-detail-dialog .dd-tabs .mat-mdc-tab-body-wrapper {
+        flex: 1 1 auto;
+        min-height: 0;
+        /* permite overflow en el body */
+    }
+
+    /* Cada tab scrollea su propio contenido */
+    .ti-detail-dialog .dd-tab-scroll {
+        height: 100%;
+        overflow: auto;
+        padding: 16px;
+    }
+
+    /* Centrado del loader cuando está cargando */
+    .ti-detail-dialog .dd-loading {
+        flex: 1 1 auto;
+        min-height: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: auto;
+    }
+
+    /* (Opcional) reforzar contraste en oscuro */
+    body.dark-theme .ti-detail-dialog .dd-divider {
+        border-bottom: 1px solid var(--surface-border);
+    }
+
+    /* ——— Utilidad para poner el fondo en el contenedor a pantalla completa ——— */
+    .bg-login {
+        /* la .page-center ya tiene min-height: 100dvh; el fondo cubrirá toda la vista */
+        /* con esto toda app debe tener un background.png en su folder /public */
+        background:
+            linear-gradient(to bottom, var(--bg-overlay-from), var(--bg-overlay-to)),
+            url('/background.png') center/cover no-repeat;
+        /* Si quieres paralaje en desktop: */
+        background-attachment: fixed;
+        box-sizing: border-box;
+        min-height: 100dvh;
+        /* por si el wrapper no lo tiene */
+    }
+
 }

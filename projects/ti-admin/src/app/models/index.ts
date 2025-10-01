@@ -12,3 +12,7 @@ export * from './TipoUnidad';
 export * from './UnidadMedica';
 export * from './DispositivoRowEx';
 export * from './SelectOpt';
+export * from './DispositivoDetail';
+export * from './Monitor';
+export * from './Periferico';
+export * from './EstadoView';

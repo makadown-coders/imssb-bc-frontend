@@ -26,6 +26,8 @@ import { CatalogosService } from '../services/catalogos.service';
 import { DispositivosService } from '../services/dispositivos.service';
 import { DispositivoRowEx } from '../models/DispositivoRowEx';
 import { BehaviorSubject, pipe, Subject, takeUntil } from 'rxjs';
+import { DispositivoDetailDialog } from '../shared/dispositivo-detail.dialog';
+import { estadoView, iconForEstado } from '../shared/estado.utils';
 
 @Component({
   standalone: true,
@@ -101,7 +103,7 @@ export class InventarioPage implements OnInit, OnDestroy {
   getTipoOpt() {
     const v = this.tipo();
     return this.tipoOptions().find(o => o.value === v);
-  }   
+  }
 
   private _norm(s?: string) {
     return (s ?? '')
@@ -109,17 +111,19 @@ export class InventarioPage implements OnInit, OnDestroy {
       .toUpperCase();
   }
 
+  iconForEstado = iconForEstado;
   // Icono para mostrar en selects/tabla
-  iconForEstado(label?: string) {
+  /*iconForEstado(label?: string) {
     const t = this._norm(label);
     if (t.includes('USO')) return 'check_circle';  // En Uso
     if (t.includes('REPAR')) return 'build';         // En Reparación
     if (t.includes('RESGU')) return 'inventory_2';   // En Resguardo (almacenado)
     return 'help';
-  }
+  }*/
 
+  estadoView = estadoView;
   // Chip (clase + label + icono) para la tabla
-  estadoView(label?: string): { cls: string; label: string; icon: string } {
+  /*estadoView(label?: string): { cls: string; label: string; icon: string } {
     const raw = (label ?? '').trim();
     const t = this._norm(raw);
 
@@ -128,7 +132,7 @@ export class InventarioPage implements OnInit, OnDestroy {
     if (t.includes('RESGU')) return { cls: 'chip--resguardo', label: raw || 'En Resguardo', icon: 'inventory_2' };
 
     return { cls: 'chip--desconocido', label: raw || '—', icon: 'help' };
-  }
+  }*/
 
   // ✅ effect como propiedad de la clase (injection context OK)
   private readonly _loadEffect = effect(() => {
@@ -210,7 +214,7 @@ export class InventarioPage implements OnInit, OnDestroy {
     return 'devices_other';
   }
   labelForTipo(input: string) { return input || '—'; }
-  seriePill(r: EquipoVM) { return r.serie || '—'; }  
+  seriePill(r: EquipoVM) { return r.serie || '—'; }
 
   // Acciones
   add() {
@@ -246,6 +250,18 @@ export class InventarioPage implements OnInit, OnDestroy {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a'); a.href = url; a.download = 'inventario_pagina.csv'; a.click();
     URL.revokeObjectURL(url);
+  }
+
+  openDetail(vm: EquipoVM) {
+    this.dialog.open(DispositivoDetailDialog, {
+      width: '940px',              // tamaño “fijo” cómodo en desktop
+      height: '620px',
+      maxWidth: '98vw',            // fallbacks responsivos
+      maxHeight: '98dvh',
+      data: vm,
+      autoFocus: false,
+      panelClass: 'ti-detail-dialog', // para estilos personalizados
+    });
   }
 
   ngOnDestroy(): void {
