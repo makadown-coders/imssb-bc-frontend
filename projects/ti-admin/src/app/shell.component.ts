@@ -15,6 +15,7 @@ import { CommonModule } from '@angular/common';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { applyTheme, persistTheme, ThemeMode } from './shared/theme.utils';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 
 type NavNode = { name: string; icon?: string; route?: string; children?: NavNode[] };
@@ -30,9 +31,15 @@ const NAV_DATA: NavNode[] = [
   standalone: true,
   imports: [
     RouterModule,
-    MatSidenavModule, MatToolbarModule,
-    MatTreeModule, MatMenuModule, MatListModule,
-    MatIconModule, MatButtonModule, MatTooltipModule, MatSlideToggleModule
+    MatSidenavModule,
+    MatToolbarModule,
+    MatTreeModule,
+    MatMenuModule,
+    MatListModule,
+    MatIconModule,
+    MatButtonModule,
+    MatTooltipModule,
+    MatSlideToggleModule,
   ],
   templateUrl: './shell.component.html',
   styleUrls: []

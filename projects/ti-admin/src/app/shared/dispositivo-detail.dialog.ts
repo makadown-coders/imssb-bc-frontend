@@ -1,5 +1,6 @@
+// projects/ti-admin/src/app/shared/dispositivo-detail.dialog.ts
 import { Component, Inject, inject, signal } from '@angular/core';
-import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef, MatDialog } from '@angular/material/dialog';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
@@ -9,9 +10,15 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MatTableModule } from '@angular/material/table';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
-import { DispositivosService} from '../services/dispositivos.service';
+import { DispositivosService } from '../services/dispositivos.service';
 import { EquipoVM, DispositivoDetail } from '../models';
 import { estadoView } from './estado.utils';
+
+// ⬇️ importa los sub-dialogs de edición
+import { CambiarAsignacionDialog } from './cambiar-asignacion.dialog';
+import { EditMonitorDialog } from './edit-monitor.dialog';
+import { EditPerifericoDialog } from './edit-periferico.dialog';
+import { EditDispositivoDialog } from './edit-dispositivo.dialog';
 
 @Component({
   standalone: true,
@@ -25,16 +32,18 @@ import { estadoView } from './estado.utils';
 })
 export class DispositivoDetailDialog {
   private api = inject(DispositivosService);
+  private dialog = inject(MatDialog);
+
+  loading = signal(true);
+  detail = signal<DispositivoDetail | null>(null);
+  estadoView = estadoView;
+
   constructor(
     @Inject(MAT_DIALOG_DATA) public vm: EquipoVM,
     private ref: MatDialogRef<DispositivoDetailDialog>,
   ) {
     this.load();
   }
-
-  loading = signal(true);
-  detail = signal<DispositivoDetail | null>(null);
-  estadoView = estadoView;
 
   get title() {
     return `${this.vm.tipo} — ${this.vm.marca ?? ''} ${this.vm.modelo ?? ''}`.trim();
@@ -46,13 +55,86 @@ export class DispositivoDetailDialog {
     const id = Number(this.vm.id);
     this.loading.set(true);
     this.api.getById(id).subscribe({
-      next: d => { 
-        this.detail.set(d); 
-        console.log('Dispositivo detail', d);
-        this.loading.set(false);        
+      next: d => {
+        this.detail.set(d);
+        this.loading.set(false);
       },
       error: _ => { this.detail.set(null); this.loading.set(false); }
     });
+  }
+
+  /** Handy para re-cargar tras guardar en sub-dialogs */
+  private reload() { this.load(); }
+
+  // ===== Acciones: Resumen =====
+  editResumen() {
+    const d = this.detail();
+    if (!d) return;
+
+    this.dialog.open(EditDispositivoDialog, {
+      width: '560px',
+      maxWidth: '98vw',
+      data: {
+        id: Number(this.vm.id),
+        ip: d.ip ?? null,
+        conexion: d.conexion ?? null,
+        observaciones: d.observaciones ?? null,
+        // si quieres editar también estos desde aquí, descomenta y soporta en tu endpoint:
+        // serial: this.vm.serie ?? null,
+        // marca:  this.vm.marca ?? null,
+        // modelo: this.vm.modelo ?? null,
+      }
+    }).afterClosed().subscribe(ok => { if (ok) this.reload(); });
+  }
+
+  cambiarAsignacion() {
+    const d = this.detail();
+    if (!d) return;
+
+    this.dialog.open(CambiarAsignacionDialog, {
+      width: '640px',
+      maxWidth: '98vw',
+      data: {
+        id: Number(this.vm.id),
+       // estado_dispositivo_id: d.estado_dispositivo_id ?? null,
+        persona_nombre_completo: this.vm.responsable_id || null,
+        //lugar_especifico: d.lugar_especifico || null
+      }
+    }).afterClosed().subscribe(ok => { if (ok) this.reload(); });
+  }
+
+  // ===== Acciones: Monitores =====
+  addMonitor() {
+    this.dialog.open(EditMonitorDialog, {
+      width: '560px',
+      maxWidth: '98vw',
+      data: { dispositivo_id: Number(this.vm.id), monitor: null }
+    }).afterClosed().subscribe(ok => { if (ok) this.reload(); });
+  }
+
+  editMonitor(m: any) {
+    this.dialog.open(EditMonitorDialog, {
+      width: '560px',
+      maxWidth: '98vw',
+      data: { dispositivo_id: Number(this.vm.id), monitor: m }
+    }).afterClosed().subscribe(ok => { if (ok) this.reload(); });
+  }
+
+  // ===== Acciones: Periféricos =====
+  addPeriferico() {
+    this.dialog.open(EditPerifericoDialog, {
+      width: '560px',
+      maxWidth: '98vw',
+      data: { dispositivo_id: Number(this.vm.id), periferico: null }
+    }).afterClosed().subscribe(ok => { if (ok) this.reload(); });
+  }
+
+  editPeriferico(p: any) {
+    this.dialog.open(EditPerifericoDialog, {
+      width: '560px',
+      maxWidth: '98vw',
+      data: { dispositivo_id: Number(this.vm.id), periferico: p }
+    }).afterClosed().subscribe(ok => { if (ok) this.reload(); });
   }
 
   // Reutiliza tus helpers si quieres coherencia visual:

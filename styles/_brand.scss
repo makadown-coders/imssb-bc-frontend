@@ -2,6 +2,9 @@
 
 @use '@angular/material' as mat;
 
+/* Importa estilos base de MDC/Material (necesarios para varios componentes) */
+@include mat.core();
+
 /* Paletas */
 $primary: mat.$green-palette;
 $tertiary: mat.$spring-green-palette;
@@ -19,6 +22,8 @@ $theme-dark: mat.define-theme((color: (theme-type: dark, primary: $primary, tert
     /* ===== LIGHT ===== */
     :root {
         @include mat.all-component-themes($theme-light);
+
+        --brand-spinner-color: #006341;
 
         --bg-overlay-from: rgba(255, 255, 255, .85);
         --bg-overlay-to: rgba(173, 210, 190, .85);
@@ -198,6 +203,8 @@ $theme-dark: mat.define-theme((color: (theme-type: dark, primary: $primary, tert
     /* ===== DARK ===== */
     body.dark-theme {
         @include mat.all-component-colors($theme-dark);
+
+        --brand-spinner-color: #CBA135;
 
         --bg-overlay-from: rgba(0, 0, 0, .45);
         --bg-overlay-to: rgba(0, 0, 0, .65);
@@ -1097,4 +1104,45 @@ $theme-dark: mat.define-theme((color: (theme-type: dark, primary: $primary, tert
         /* por si el wrapper no lo tiene */
     }
 
+    body.loading-open {
+        overflow: hidden;
+    }
+
+    /******************** SPINNER ********************/
+    .loading-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 1000;
+        background: rgba(0, 0, 0, .38);
+        backdrop-filter: blur(4px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        --mdc-circular-progress-active-indicator-color: var(--brand-spinner-color);
+    }
+
+    .panel {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 16px 18px;
+        border-radius: 20px;
+        background: var(--surface-1);
+        color: var(--text-strong);
+        border: 1px solid var(--surface-border);
+        box-shadow: 0 10px 28px rgba(0, 0, 0, 0.18);
+    }
+
+    .mdc-circular-progress__indeterminate-circle-graphic,
+    .mdc-circular-progress__determinate-circle-graphic {
+        stroke: var(--brand-spinner-color) !important;
+    }
+
+    .mat-mdc-progress-spinner,
+    .mdc-circular-progress {
+        --mdc-circular-progress-active-indicator-color: var(--brand-spinner-color) !important;
+    }
+
+    /********************* FIN SPINNER ********************/
 }

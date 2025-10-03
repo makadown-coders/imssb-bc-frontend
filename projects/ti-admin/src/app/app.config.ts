@@ -4,11 +4,12 @@ import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { AUTH_CONFIG, AuthInterceptor } from '@imssb-bc/auth-core'; // usa tu alias de paths
 import { routes } from './app.routes';
 import { RuntimeConfigService } from './services/runtime-config.service';
+import { LoaderInterceptor } from '@imssb-bc/auth-ui';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideRouter(routes),
-    provideHttpClient(withInterceptors([AuthInterceptor])),
+    provideHttpClient(withInterceptors([AuthInterceptor, LoaderInterceptor])),
     // 1) Cargar /env.json antes de arrancar
     {
       provide: APP_INITIALIZER,
