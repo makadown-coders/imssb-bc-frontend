@@ -1,1 +1,98 @@
-edit-dispositivo works!
+<!-- projects/ti-admin/src/app/shared/edit-dispositivo.dialog.html -->
+<div mat-dialog-title>Editar dispositivo</div>
+<div mat-dialog-content class="p-16">
+  <form [formGroup]="f">
+    <mat-form-field class="full" appearance="fill">
+      <mat-label># Serie</mat-label>
+      <input matInput formControlName="serial" />
+    </mat-form-field>
+
+    <mat-form-field class="full" appearance="fill">
+      <mat-label>Marca</mat-label>
+      <input matInput formControlName="marca" />
+    </mat-form-field>
+
+    <mat-form-field class="full" appearance="fill">
+      <mat-label>Modelo</mat-label>
+      <input matInput formControlName="modelo" />
+    </mat-form-field>
+
+    <mat-form-field class="full" appearance="fill">
+      <mat-label>IP</mat-label>
+      <input matInput formControlName="ip" />
+    </mat-form-field>
+
+    <mat-form-field class="full" appearance="fill">
+      <mat-label>Conexión</mat-label>
+      <input matInput formControlName="conexion" />
+    </mat-form-field>
+
+    <mat-form-field class="full" appearance="fill">
+      <mat-label>Observaciones</mat-label>
+      <textarea matInput rows="4" formControlName="observaciones"></textarea>
+    </mat-form-field>
+  </form>
+
+  <h3 class="mat-title-small" style="margin:8px 0 4px;">Direcciones MAC</h3>
+
+  <!-- Lista actual -->
+  <div *ngIf="macs().length; else noMacs">
+    <div class="mac-row" *ngFor="let m of macs(); let i = index">
+      <mat-icon>memory</mat-icon>
+      <code>{{ m.mac }}</code>
+      <span class="muted" *ngIf="m.iface_name">&nbsp;· {{ m.iface_name }}</span>
+      <span class="muted" *ngIf="m.kind">&nbsp;· {{ m.kind }}</span>
+
+      <button mat-stroked-button [color]="m.en_uso ? 'primary' : undefined" (click)="toggleEnUso(i)">
+        <mat-icon>{{ m.en_uso ? 'toggle_on' : 'toggle_off' }}</mat-icon>
+        &nbsp;En uso
+      </button>
+
+      <span class="spacer"></span>
+
+      <button mat-icon-button (click)="removeMac(i)" aria-label="Quitar MAC">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+  </div>
+  <ng-template #noMacs>
+    <div class="muted" style="margin:4px 0 8px;">Sin MACs registradas.</div>
+  </ng-template>
+
+  <!-- Alta rápida -->
+  <div class="grid-4" style="margin:8px 0 16px;">
+    <mat-form-field appearance="fill">
+      <mat-label>Nueva MAC</mat-label>
+      <input matInput [ngModel]="newMac()" (ngModelChange)="newMac.set($event)" placeholder="AA:BB:CC:DD:EE:FF" />
+    </mat-form-field>
+
+    <mat-form-field appearance="fill">
+      <mat-label>Interfaz</mat-label>
+      <input matInput [ngModel]="newIface()" (ngModelChange)="newIface.set($event)" placeholder="eth0 / wlan0 / mgmt" />
+    </mat-form-field>
+
+    <mat-form-field appearance="fill">
+      <mat-label>Tipo</mat-label>
+      <mat-select [value]="newKind()" (valueChange)="newKind.set($event)">
+        <mat-option value="ethernet">Ethernet</mat-option>
+        <mat-option value="wifi">Wi-Fi</mat-option>
+        <mat-option value="mgmt">Gestión</mat-option>
+        <mat-option value="bt">Bluetooth</mat-option>
+        <mat-option value="other">Otro</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <div class="row-right">
+      <mat-checkbox [checked]="newEnUso()" (change)="newEnUso.set($event.checked)">En uso</mat-checkbox>
+      <button mat-flat-button color="primary" type="button" (click)="addMac()">
+        <mat-icon>add</mat-icon>&nbsp;Agregar
+      </button>
+    </div>
+  </div>
+
+</div>
+<div mat-dialog-actions align="end">
+  <button mat-stroked-button type="button" (click)="close()">Cancelar</button>
+  <button mat-flat-button color="primary" type="button" [disabled]="f.invalid || saving" (click)="save()"
+    cdkFocusInitial>Guardar</button>
+</div>

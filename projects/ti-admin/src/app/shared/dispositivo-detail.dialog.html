@@ -1,3 +1,4 @@
+<!-- projects/ti-admin/src/app/shared/dispositivo-detail.dialog.html -->
 <!-- CABECERA (tal como la tienes) -->
 <div class="detail-header mat-elevation-z2 surface-card"
     style="padding:16px; display:flex; align-items:center; gap:12px;">
@@ -42,7 +43,7 @@
             <!-- TAB: Resumen -->
             <mat-tab label="Resumen">
                 <div class="dd-tab-scroll">
-                    <div class="dd-section-toolbar">                        
+                    <div class="dd-section-toolbar">
                         <span class="dd-spacer"></span>
                         <button mat-stroked-button color="primary" (click)="editResumen()">
                             <mat-icon>edit</mat-icon>&nbsp;Editar
@@ -52,7 +53,15 @@
                         </button>
                     </div>
 
-                    <table class="kv">
+                    <table class="kv" style="margin:26px 0 28px;">
+                        <tr>
+                            <td>Marca</td>
+                            <td>{{ vm.marca || '—' }}</td>
+                        </tr>
+                        <tr>
+                            <td>Modelo</td>
+                            <td>{{ vm.modelo || '—' }}</td>
+                        </tr>
                         <tr>
                             <td>IP</td>
                             <td>{{ detail()?.ip || '—' }}</td>
@@ -66,11 +75,29 @@
                             <td>{{ detail()?.observaciones || '—' }}</td>
                         </tr>
                     </table>
+
+                    <!-- MACs -->
+                    <h3 class="mat-title-small" style="margin:16px 0 8px;">MACs</h3>
+
+                    <ng-container *ngIf="nicList().length; else noMacs">
+                        <div class="macs-list">
+                            <span class="chip mac-chip" *ngFor="let n of nicList()">
+                                <mat-icon class="chip-icn">{{ iconForNic(n.kind) }}</mat-icon>
+                                <code class="mac-code">{{ n.mac }}</code>
+                                <span class="muted" *ngIf="n.iface_name">&nbsp;· {{ n.iface_name }}</span>
+                                <span class="muted" *ngIf="n.kind">&nbsp;· {{ nicKindLabel(n.kind) }}</span>
+                                <span class="muted" *ngIf="n.en_uso">&nbsp;· En uso</span>
+                            </span>
+                        </div>
+                    </ng-container>
+                    <ng-template #noMacs>
+                        <div class="muted">Sin MACs registradas.</div>
+                    </ng-template>
                 </div>
             </mat-tab>
 
             <!-- TAB: Monitores -->
-            <mat-tab label="Monitores" *ngIf="detail()?.monitores?.length || true">
+            <mat-tab label="Monitores" *ngIf="detail()?.monitores?.length  || true">
                 <div class="dd-tab-scroll">
                     <div class="dd-section-toolbar">
                         <div class="dd-section-title">Monitores</div>

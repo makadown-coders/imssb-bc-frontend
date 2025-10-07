@@ -23,6 +23,19 @@ $theme-dark: mat.define-theme((color: (theme-type: dark, primary: $primary, tert
     :root {
         @include mat.all-component-themes($theme-light);
 
+        /* ===== TextField (FILLED) tokens ===== */
+        --mdc-filled-text-field-container-color: rgba(255, 255, 255, .92);
+        /* claro: blanco suave */
+        --mdc-filled-text-field-input-text-color: var(--text-strong);
+        --mdc-filled-text-field-label-text-color: rgba(0, 0, 0, .60);
+        --mdc-filled-text-field-focus-label-text-color: var(--brand-btn-bg);
+        /* tu verde o dorado */
+        --mdc-filled-text-field-caret-color: var(--brand-btn-bg);
+        --mdc-filled-text-field-active-indicator-color: rgba(0, 0, 0, .38);
+        --mdc-filled-text-field-focus-active-indicator-color: var(--brand-btn-bg);
+        --mdc-filled-text-field-hover-active-indicator-color: rgba(0, 0, 0, .60);
+        --mdc-filled-text-field-container-shape: 12px;
+
         --brand-spinner-color: #006341;
 
         --bg-overlay-from: rgba(255, 255, 255, .85);
@@ -203,6 +216,16 @@ $theme-dark: mat.define-theme((color: (theme-type: dark, primary: $primary, tert
     /* ===== DARK ===== */
     body.dark-theme {
         @include mat.all-component-colors($theme-dark);
+
+        --mdc-filled-text-field-container-color: rgba(255, 255, 255, .06);
+        --mdc-filled-text-field-input-text-color: var(--text-strong);
+        --mdc-filled-text-field-label-text-color: rgba(255, 255, 255, .70);
+        --mdc-filled-text-field-focus-label-text-color: var(--imssb-gold);
+        --mdc-filled-text-field-caret-color: var(--imssb-gold);
+        --mdc-filled-text-field-active-indicator-color: rgba(255, 255, 255, .28);
+        --mdc-filled-text-field-focus-active-indicator-color: var(--imssb-gold);
+        --mdc-filled-text-field-hover-active-indicator-color: rgba(255, 255, 255, .50);
+        --mdc-filled-text-field-container-shape: 12px;
 
         --brand-spinner-color: #CBA135;
 

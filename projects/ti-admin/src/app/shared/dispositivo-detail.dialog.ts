@@ -57,6 +57,9 @@ export class DispositivoDetailDialog {
     this.api.getById(id).subscribe({
       next: d => {
         this.detail.set(d);
+        this.vm.marca = d.marca || null;
+        this.vm.modelo = d.modelo || null;
+        this.vm.serie = d.serial
         this.loading.set(false);
       },
       error: _ => { this.detail.set(null); this.loading.set(false); }
@@ -72,17 +75,18 @@ export class DispositivoDetailDialog {
     if (!d) return;
 
     this.dialog.open(EditDispositivoDialog, {
-      width: '560px',
-      maxWidth: '98vw',
+      width: '840px',
+      height: '820px',
+      maxWidth: '198vw',
       data: {
         id: Number(this.vm.id),
         ip: d.ip ?? null,
         conexion: d.conexion ?? null,
         observaciones: d.observaciones ?? null,
-        // si quieres editar también estos desde aquí, descomenta y soporta en tu endpoint:
-        // serial: this.vm.serie ?? null,
-        // marca:  this.vm.marca ?? null,
-        // modelo: this.vm.modelo ?? null,
+        serial: this.vm.serie ?? null,
+        marca: this.vm.marca ?? null,
+        modelo: this.vm.modelo ?? null,
+        // macs: this.vm.macs ?? [] // aqui no encuentro donde cachar las macs
       }
     }).afterClosed().subscribe(ok => { if (ok) this.reload(); });
   }
@@ -96,7 +100,7 @@ export class DispositivoDetailDialog {
       maxWidth: '98vw',
       data: {
         id: Number(this.vm.id),
-       // estado_dispositivo_id: d.estado_dispositivo_id ?? null,
+        // estado_dispositivo_id: d.estado_dispositivo_id ?? null,
         persona_nombre_completo: this.vm.responsable_id || null,
         //lugar_especifico: d.lugar_especifico || null
       }
@@ -145,5 +149,32 @@ export class DispositivoDetailDialog {
     if (key.includes('IMP')) return 'print';
     if (key.includes('ROUT') || key.includes('SWITCH') || key.includes('AP')) return 'device_hub';
     return 'devices_other';
+  }
+
+  nicList() {
+    const d: any = this.detail();
+    return (d?.nics || d?.macs || []) as Array<{
+      mac: string; iface_name?: string; kind?: string; en_uso?: boolean;
+    }>;
+  }
+
+  iconForNic(kind?: string) {
+    switch ((kind || '').toLowerCase()) {
+      case 'wifi': return 'wifi';
+      case 'mgmt': return 'settings';
+      case 'bt': return 'bluetooth';
+      case 'ethernet': return 'settings_ethernet';
+      default: return 'memory';
+    }
+  }
+
+  nicKindLabel(kind?: string) {
+    switch ((kind || '').toLowerCase()) {
+      case 'wifi': return 'Wi-Fi';
+      case 'mgmt': return 'Gestión';
+      case 'bt': return 'Bluetooth';
+      case 'ethernet': return 'Ethernet';
+      default: return 'Otro';
+    }
   }
 }

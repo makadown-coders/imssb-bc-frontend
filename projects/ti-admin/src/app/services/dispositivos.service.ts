@@ -34,4 +34,21 @@ export class DispositivosService {
   getById(id: number) {
     return this.http.get<DispositivoDetail>(`${this.base}/api/dispositivos/${id}`);
   }
+
+  updateBasic(id: number, body: any) {
+    return this.http.put<{ ok: boolean; id: number }>(`${this.base}/api/dispositivos/${id}`, body);
+  }
+  cambiarAsignacion(id: number, body: any) {
+    return this.http.post<{ ok: boolean; asignacion_id: number }>(`${this.base}/api/dispositivos/${id}/asignacion`, body);
+  }
+  saveMonitor(id: number, monitor: any) {
+    return monitor?.id
+      ? this.http.put<{ ok: boolean; id: number }>(`${this.base}/api/dispositivos/${id}/monitores/${monitor.id}`, monitor)
+      : this.http.post<{ ok: boolean; id: number }>(`${this.base}/api/dispositivos/${id}/monitores`, monitor);
+  }
+  savePeriferico(id: number, p: any) {
+    return p?.id
+      ? this.http.put<{ ok: boolean; id: number }>(`${this.base}/api/dispositivos/${id}/perifericos/${p.id}`, p)
+      : this.http.post<{ ok: boolean; id: number }>(`${this.base}/api/dispositivos/${id}/perifericos`, p);
+  }
 }

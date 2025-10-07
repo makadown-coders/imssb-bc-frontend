@@ -69,7 +69,12 @@ export class InventarioPage implements OnInit, OnDestroy {
   // (opcional) un icono por defecto cuando es "Todos los tipos"
   public readonly defaultTipoIcon = 'devices_other';
 
-  displayedColumns = ['tipo', 'modelo', 'serie', 'ubicacion', 'responsable', 'estado', 'acciones'];
+  displayedColumns = ['tipo', 
+    'modelo', 
+    'serie', 
+    'ubicacion', 
+    'responsable', 
+    'estado'/*, 'acciones'*/];
 
   $onDestroy = new Subject<void>();
 
