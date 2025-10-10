@@ -15,11 +15,23 @@
             Responsable/Lugar: <strong>{{ vm.responsable_id || '—' }}</strong>
         </div>
     </div>
-
-    <span class="chip" [ngClass]="estadoView(vm.estado).cls">
+    
+    <!-- Chip clickable que abre menú -->
+    <button class="chip" [ngClass]="estadoView(vm.estado).cls" [matMenuTriggerFor]="estadoMenu"
+        [disabled]="changingEstado" matRipple aria-label="Cambiar estado">
         <mat-icon class="chip-icn">{{ estadoView(vm.estado).icon }}</mat-icon>
         <span class="chip-label">{{ estadoView(vm.estado).label }}</span>
-    </span>
+        <mat-icon class="chip-icn">arrow_drop_down</mat-icon>
+    </button>
+
+    <mat-menu #estadoMenu="matMenu">
+        <button mat-menu-item *ngFor="let e of estadoOpts()" (click)="setEstado(e)" [disabled]="changingEstado">
+            <mat-icon>{{ e.icon }}</mat-icon>
+            <span>{{ e.label }}</span>
+            <span class="spacer"></span>
+            <mat-icon *ngIf="isActiveEstado(e)">check</mat-icon>
+        </button>
+    </mat-menu>
 
     <button mat-icon-button (click)="close()" aria-label="Cerrar">
         <mat-icon>close</mat-icon>
@@ -53,46 +65,51 @@
                         </button>
                     </div>
 
-                    <table class="kv" style="margin:26px 0 28px;">
+                    <table class="kv" style="margin-top:36px;">
                         <tr>
-                            <td>Marca</td>
-                            <td>{{ vm.marca || '—' }}</td>
+                            <td>Marca / Modelo</td>
+                            <td>&nbsp;&nbsp;</td>
+                            <td>
+                                <strong>{{ detail()?.marca || '—' }}</strong>
+                                <ng-container *ngIf="detail()?.modelo"> · {{ detail()?.modelo }}</ng-container>
+                            </td>
                         </tr>
+
                         <tr>
-                            <td>Modelo</td>
-                            <td>{{ vm.modelo || '—' }}</td>
+                            <td>IP / Conexión</td>
+                            <td>&nbsp;&nbsp;</td>
+                            <td>
+                                <span>{{ detail()?.ip || '—' }}</span>
+                                <ng-container *ngIf="detail()?.conexion"> · {{ detail()?.conexion }}</ng-container>
+                            </td>
                         </tr>
-                        <tr>
-                            <td>IP</td>
-                            <td>{{ detail()?.ip || '—' }}</td>
-                        </tr>
-                        <tr>
-                            <td>Conexión</td>
-                            <td>{{ detail()?.conexion || '—' }}</td>
-                        </tr>
+
                         <tr>
                             <td>Observaciones</td>
+                            <td>&nbsp;&nbsp;</td>
                             <td>{{ detail()?.observaciones || '—' }}</td>
                         </tr>
+                        <tr>
+                            <td>&nbsp;&nbsp;</td>
+                            <td>&nbsp;&nbsp;</td>
+                            <td>&nbsp;&nbsp;</td>
+                        </tr>
+                        <tr>
+                            <td>MACs</td>
+                            <td>&nbsp;&nbsp;</td>
+                            <td>
+                                <ng-container *ngIf="nicList().length; else noNics">
+                                    <span class="mac-chip" *ngFor="let n of nicList()"
+                                        style="margin-right:8px;margin-bottom:6px;display:inline-flex;">
+                                        <mat-icon class="chip-icn">memory</mat-icon>
+                                        {{ n.mac }}
+                                        <span class="muted" *ngIf="n.kind">&nbsp;· {{ n.kind }}</span>
+                                    </span>
+                                </ng-container>
+                                <ng-template #noNics>—</ng-template>
+                            </td>
+                        </tr>
                     </table>
-
-                    <!-- MACs -->
-                    <h3 class="mat-title-small" style="margin:16px 0 8px;">MACs</h3>
-
-                    <ng-container *ngIf="nicList().length; else noMacs">
-                        <div class="macs-list">
-                            <span class="chip mac-chip" *ngFor="let n of nicList()">
-                                <mat-icon class="chip-icn">{{ iconForNic(n.kind) }}</mat-icon>
-                                <code class="mac-code">{{ n.mac }}</code>
-                                <span class="muted" *ngIf="n.iface_name">&nbsp;· {{ n.iface_name }}</span>
-                                <span class="muted" *ngIf="n.kind">&nbsp;· {{ nicKindLabel(n.kind) }}</span>
-                                <span class="muted" *ngIf="n.en_uso">&nbsp;· En uso</span>
-                            </span>
-                        </div>
-                    </ng-container>
-                    <ng-template #noMacs>
-                        <div class="muted">Sin MACs registradas.</div>
-                    </ng-template>
                 </div>
             </mat-tab>
 

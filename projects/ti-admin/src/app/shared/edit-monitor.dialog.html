@@ -1,1 +1,39 @@
-edit-monitor works!
+<div mat-dialog-title>{{ title }}</div>
+
+<form [formGroup]="f" (ngSubmit)="save()">
+  <div mat-dialog-content class="p-16">
+    <div class="grid-2">
+      <mat-form-field appearance="fill">
+        <mat-label>Serie</mat-label>
+        <input matInput formControlName="serial" autocomplete="off" />
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>Marca</mat-label>
+        <input matInput formControlName="marca" />
+      </mat-form-field>
+    </div>
+
+    <div class="grid-2">
+      <mat-form-field appearance="fill">
+        <mat-label>Modelo</mat-label>
+        <input matInput formControlName="modelo" />
+      </mat-form-field>
+
+      <div class="row-end">
+        <mat-checkbox formControlName="es_principal">Marcar como principal</mat-checkbox>
+      </div>
+    </div>
+
+    <div class="hint">
+      Al marcar <strong>principal</strong>, cualquier otro monitor del dispositivo quedará desmarcado automáticamente.
+    </div>
+  </div>
+
+  <div mat-dialog-actions align="end">
+    <button mat-stroked-button type="button" (click)="close()">Cancelar</button>
+    <button mat-flat-button color="primary" type="submit" [disabled]="saving">
+      <mat-icon>save</mat-icon>&nbsp;Guardar
+    </button>
+  </div>
+</form>

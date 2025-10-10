@@ -1,5 +1,6 @@
 <!-- projects/ti-admin/src/app/shared/edit-dispositivo.dialog.html -->
 <div mat-dialog-title>Editar dispositivo</div>
+
 <div mat-dialog-content class="p-16">
   <form [formGroup]="f">
     <mat-form-field class="full" appearance="fill">
@@ -7,46 +8,51 @@
       <input matInput formControlName="serial" />
     </mat-form-field>
 
-    <mat-form-field class="full" appearance="fill">
-      <mat-label>Marca</mat-label>
-      <input matInput formControlName="marca" />
-    </mat-form-field>
+    <!-- Marca + Modelo -->
+    <div class="grid-2">
+      <mat-form-field appearance="fill">
+        <mat-label>Marca</mat-label>
+        <input matInput formControlName="marca" />
+      </mat-form-field>
 
-    <mat-form-field class="full" appearance="fill">
-      <mat-label>Modelo</mat-label>
-      <input matInput formControlName="modelo" />
-    </mat-form-field>
+      <mat-form-field appearance="fill">
+        <mat-label>Modelo</mat-label>
+        <input matInput formControlName="modelo" />
+      </mat-form-field>
+    </div>
 
-    <mat-form-field class="full" appearance="fill">
-      <mat-label>IP</mat-label>
-      <input matInput formControlName="ip" />
-    </mat-form-field>
+    <!-- IP + Conexión -->
+    <div class="grid-2">
+      <mat-form-field appearance="fill">
+        <mat-label>IP</mat-label>
+        <input matInput formControlName="ip" />
+      </mat-form-field>
 
-    <mat-form-field class="full" appearance="fill">
-      <mat-label>Conexión</mat-label>
-      <input matInput formControlName="conexion" />
-    </mat-form-field>
+      <mat-form-field appearance="fill">
+        <mat-label>Conexión</mat-label>
+        <input matInput formControlName="conexion" />
+      </mat-form-field>
+    </div>
 
     <mat-form-field class="full" appearance="fill">
       <mat-label>Observaciones</mat-label>
-      <textarea matInput rows="4" formControlName="observaciones"></textarea>
+      <textarea matInput rows="3" formControlName="observaciones"></textarea>
     </mat-form-field>
   </form>
 
-  <h3 class="mat-title-small" style="margin:8px 0 4px;">Direcciones MAC</h3>
+  <h3 class="mat-dialog-title" style="margin:8px 0 4px;">Direcciones MAC</h3>
 
-  <!-- Lista actual -->
-  <div *ngIf="macs().length; else noMacs">
+  <!-- Lista -->
+  <div *ngIf="macs().length; else noMacs" class="grid-2">
     <div class="mac-row" *ngFor="let m of macs(); let i = index">
       <mat-icon>memory</mat-icon>
-      <code>{{ m.mac }}</code>
-      <span class="muted" *ngIf="m.iface_name">&nbsp;· {{ m.iface_name }}</span>
-      <span class="muted" *ngIf="m.kind">&nbsp;· {{ m.kind }}</span>
+      <code class="muted">{{ m.mac }}</code>
 
-      <button mat-stroked-button [color]="m.en_uso ? 'primary' : undefined" (click)="toggleEnUso(i)">
-        <mat-icon>{{ m.en_uso ? 'toggle_on' : 'toggle_off' }}</mat-icon>
-        &nbsp;En uso
-      </button>
+      <!-- solo mostramos el tipo como chip -->
+      <span class="mac-chip" *ngIf="m.kind as k">
+        <mat-icon class="chip-icn">label</mat-icon>
+        {{ k }}
+      </span>
 
       <span class="spacer"></span>
 
@@ -59,16 +65,26 @@
     <div class="muted" style="margin:4px 0 8px;">Sin MACs registradas.</div>
   </ng-template>
 
-  <!-- Alta rápida -->
-  <div class="grid-4" style="margin:8px 0 16px;">
+  <!-- Alta rápida: MAC + Tipo + Agregar -->
+  <div class="grid-mac" style="margin:8px 0 16px;">
     <mat-form-field appearance="fill">
       <mat-label>Nueva MAC</mat-label>
-      <input matInput [ngModel]="newMac()" (ngModelChange)="newMac.set($event)" placeholder="AA:BB:CC:DD:EE:FF" />
-    </mat-form-field>
+      <input matInput [ngModel]="newMac()" (ngModelChange)="onNewMacChange($event)" [ngModelOptions]="{standalone:true}"
+        placeholder="AA:BB:CC:DD:EE:FF, d0ad.0859.30f7, D0-AD-08-59-30-F7" (keyup.enter)="canAddMac() && addMac()"
+        aria-describedby="mac-hint mac-error" />
 
-    <mat-form-field appearance="fill">
-      <mat-label>Interfaz</mat-label>
-      <input matInput [ngModel]="newIface()" (ngModelChange)="newIface.set($event)" placeholder="eth0 / wlan0 / mgmt" />
+      <!-- Hints según el estado -->
+      <mat-hint id="mac-hint" *ngIf="!newMac()?.trim()">
+        Escribe la MAC y pulsa <b>Agregar</b>.
+      </mat-hint>
+
+      <mat-hint id="mac-hint" *ngIf="canAddMac()">
+        Se guardará como <b>{{ macPreview() }}</b>. Si olvidas darle a <b>Agregar</b>,
+        la agregaremos automáticamente al <b>Guardar</b>.
+      </mat-hint>
+
+      <!-- Error accesible -->
+      <mat-error id="mac-error" *ngIf="macError()">{{ macError() }}</mat-error>
     </mat-form-field>
 
     <mat-form-field appearance="fill">
@@ -82,17 +98,16 @@
       </mat-select>
     </mat-form-field>
 
-    <div class="row-right">
-      <mat-checkbox [checked]="newEnUso()" (change)="newEnUso.set($event.checked)">En uso</mat-checkbox>
-      <button mat-flat-button color="primary" type="button" (click)="addMac()">
-        <mat-icon>add</mat-icon>&nbsp;Agregar
-      </button>
-    </div>
+    <button mat-flat-button color="primary" type="button" (click)="addMac()" [disabled]="!canAddMac()">
+      <mat-icon>add</mat-icon>&nbsp;Agregar
+    </button>
   </div>
-
 </div>
+
 <div mat-dialog-actions align="end">
   <button mat-stroked-button type="button" (click)="close()">Cancelar</button>
-  <button mat-flat-button color="primary" type="button" [disabled]="f.invalid || saving" (click)="save()"
-    cdkFocusInitial>Guardar</button>
+  <button mat-flat-button color="primary" type="button"
+    [disabled]="f.invalid || saving || (!!newMac().trim() && !!macError())" (click)="save()" cdkFocusInitial>
+    Guardar
+  </button>
 </div>

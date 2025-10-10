@@ -259,8 +259,8 @@ export class InventarioPage implements OnInit, OnDestroy {
 
   openDetail(vm: EquipoVM) {
     this.dialog.open(DispositivoDetailDialog, {
-      width: '940px',              // tamaño “fijo” cómodo en desktop
-      height: '620px',
+      width: '740px',              // tamaño “fijo” cómodo en desktop
+      height: '640px',
       maxWidth: '98vw',            // fallbacks responsivos
       maxHeight: '98dvh',
       data: vm,

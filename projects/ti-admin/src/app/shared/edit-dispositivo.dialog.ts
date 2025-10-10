@@ -1,6 +1,6 @@
 // projects/ti-admin/src/app/shared/edit-dispositivo.dialog.ts
 import { CommonModule } from '@angular/common';
-import { Component, inject, Inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, Inject, OnInit, signal } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef, MatDialogTitle } from '@angular/material/dialog';
@@ -14,22 +14,13 @@ import { MatSelectModule } from '@angular/material/select';
 
 @Component({
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, 
-        MatButtonModule, MatFormFieldModule, 
-        MatInputModule, FormsModule, 
-        MatSelectModule, MatCheckboxModule, MatIconModule,
-        MatDialogModule, MatDialogTitle
+    imports: [CommonModule, ReactiveFormsModule, FormsModule,
+        MatDialogModule, MatDialogTitle,
+        MatButtonModule, MatFormFieldModule, MatInputModule,
+        MatSelectModule, MatIconModule,
     ],
     selector: 'ti-edit-dispositivo-dialog',
     templateUrl: 'edit-dispositivo.dialog.html',
-    styles: [`.p-16{padding:16px}
-    .full{width:100%}
-    .mac-row{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px dashed rgba(0,0,0,.08)}
-    .mac-row .spacer{flex:1}
-    .mac-row code{font-weight:700}
-    .grid-4{display:grid;grid-template-columns:1.2fr 1fr 1fr auto;gap:12px;align-items:center}
-    .row-right{display:flex;align-items:center;gap:8px;justify-content:flex-end}
-    .muted{opacity:.8}`]
 })
 
 export class EditDispositivoDialog {
@@ -43,66 +34,103 @@ export class EditDispositivoDialog {
         observaciones?: string | null;
         macs?: NicItem[];
     } = inject(MAT_DIALOG_DATA);
-    private ref: MatDialogRef<EditDispositivoDialog> = inject(MatDialogRef);
+
+    private ref = inject(MatDialogRef<EditDispositivoDialog>);
     private api = inject(DispositivosService);
+
     saving = false;
 
     f = new FormGroup({
         serial: new FormControl(this.data?.serial ?? '-', { nonNullable: true }),
         marca: new FormControl(this.data?.marca ?? '-', { nonNullable: true }),
-        modelo: new FormControl(this.data?.modelo ?? '-', { nonNullable: true }),      
+        modelo: new FormControl(this.data?.modelo ?? '-', { nonNullable: true }),
         ip: new FormControl(this.data?.ip ?? '-', { nonNullable: true }),
         conexion: new FormControl(this.data?.conexion ?? '-', { nonNullable: true }),
         observaciones: new FormControl(this.data?.observaciones ?? '-', { nonNullable: true }),
     });
+
+    // MACs existentes
     macs = signal<NicItem[]>(Array.isArray(this.data.macs) ? this.data.macs : []);
+
+    // Alta rápida (simplificada)
     newMac = signal<string>('');
-    newIface = signal<string>('');
     newKind = signal<'ethernet' | 'wifi' | 'mgmt' | 'bt' | 'other'>('ethernet');
-    newEnUso = signal<boolean>(false);
+
+    // UX validación
+    macError = signal<string | null>(null);
+    macPreview = signal<string | null>(null);
+    canAddMac = computed(() => !!this.macPreview() && !this.macError());
 
     close() { this.ref.close(false); }
 
-    addMac() {
-        const raw = (this.newMac() || '').trim();
-        if (!MAC_RE.test(raw)) return; // valida
+    onNewMacChange(val: string) {
+        this.newMac.set(val);
+        const raw = (val || '').trim();
+        if (!raw) { this.macError.set('Captura una MAC.'); this.macPreview.set(null); return; }
+
+        const hex = raw.replace(/[^0-9a-f]/gi, '');
+        if (hex.length !== 12) { this.macError.set('Debe tener 12 dígitos hexadecimales.'); this.macPreview.set(null); return; }
+
         const pretty = normalizeMac(raw);
+        if (!pretty) { this.macError.set('Formato inválido.'); this.macPreview.set(null); return; }
 
-        // evita duplicados locales por mac normalizada
-        const exists = this.macs().some(m => normalizeMac(m.mac) === pretty);
-        if (exists) return;
+        const dup = this.macs().some(m => normalizeMac(m.mac) === pretty);
+        if (dup) { this.macError.set('Esta MAC ya está en la lista.'); this.macPreview.set(null); return; }
 
-        this.macs.update(arr => [...arr, {
-            mac: pretty,
-            iface_name: this.newIface() || undefined,
-            kind: this.newKind(),
-            en_uso: this.newEnUso()
-        }]);
-
-        this.newMac.set(''); this.newIface.set(''); this.newKind.set('ethernet'); this.newEnUso.set(false);
+        this.macError.set(null);
+        this.macPreview.set(pretty);
     }
 
-    toggleEnUso(i: number) {
-        this.macs.update(arr => arr.map((m, idx) => idx === i ? { ...m, en_uso: !m.en_uso } : m));
+    addMac() {
+        if (!this.canAddMac()) return;
+        const pretty = this.macPreview() || normalizeMac(this.newMac());
+
+        this.macs.update(arr => [
+            ...arr,
+            {
+                mac: pretty,
+                // 👇 “tras bambalinas”: interfaz = tipo, en_uso = true
+                iface_name: this.newKind(),   // mismo valor que el tipo
+                kind: this.newKind(),
+                en_uso: true,
+            }
+        ]);
+
+        // reset
+        this.newMac.set('');
+        this.newKind.set('ethernet');
+        this.macError.set(null);
+        this.macPreview.set(null);
     }
 
     removeMac(i: number) {
         this.macs.update(arr => arr.filter((_, idx) => idx !== i));
+        this.onNewMacChange(this.newMac());
     }
 
     save() {
+        // Si hay una MAC válida pendiente, agrégala automáticamente
+        if (this.canAddMac()) {
+            this.addMac();
+        }
+
+        // Si lo que hay escrito es inválido, no permitimos guardar
+        if ((this.newMac()?.trim() || '') && this.macError()) {
+            return; // la UI mostrará el <mat-error>
+        }
+
         if (this.f.invalid) return;
         this.saving = true;
 
-        // 👇 ahora también mandamos las NICs
         const body = {
             ...this.f.value,
             nics: this.macs().map(m => ({
-                id: m.id,                             // si existe
-                mac: normalizeMac(m.mac),             // normalizada
-                iface_name: m.iface_name ?? null,
+                id: m.id,
+                mac: normalizeMac(m.mac),
+                // tras bambalinas:
+                iface_name: m.iface_name ?? (m.kind ?? 'ethernet'),
                 kind: m.kind ?? 'ethernet',
-                en_uso: !!m.en_uso,
+                en_uso: m.en_uso ?? true,
             })),
         };
 

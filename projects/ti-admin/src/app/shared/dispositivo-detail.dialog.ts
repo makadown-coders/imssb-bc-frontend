@@ -19,6 +19,8 @@ import { CambiarAsignacionDialog } from './cambiar-asignacion.dialog';
 import { EditMonitorDialog } from './edit-monitor.dialog';
 import { EditPerifericoDialog } from './edit-periferico.dialog';
 import { EditDispositivoDialog } from './edit-dispositivo.dialog';
+import { MatMenuModule } from '@angular/material/menu';
+import { CatalogosService } from '../services/catalogos.service';
 
 @Component({
   standalone: true,
@@ -26,23 +28,30 @@ import { EditDispositivoDialog } from './edit-dispositivo.dialog';
   imports: [
     CommonModule,
     MatDialogModule, MatIconModule, MatButtonModule, MatDividerModule,
-    MatChipsModule, MatTabsModule, MatTableModule, MatProgressSpinnerModule
+    MatChipsModule, MatTabsModule, MatTableModule, MatProgressSpinnerModule,
+    MatMenuModule
   ],
   templateUrl: './dispositivo-detail.dialog.html'
 })
 export class DispositivoDetailDialog {
   private api = inject(DispositivosService);
+  private cat = inject(CatalogosService);
   private dialog = inject(MatDialog);
 
   loading = signal(true);
   detail = signal<DispositivoDetail | null>(null);
   estadoView = estadoView;
 
+  changingEstado = false;
+  // menú de estados (desde catálogo)
+  estadoOpts = signal<Array<{ id: number; label: string; icon: string }>>([]);
+
   constructor(
     @Inject(MAT_DIALOG_DATA) public vm: EquipoVM,
     private ref: MatDialogRef<DispositivoDetailDialog>,
   ) {
     this.load();
+    this.loadEstados();
   }
 
   get title() {
@@ -59,7 +68,9 @@ export class DispositivoDetailDialog {
         this.detail.set(d);
         this.vm.marca = d.marca || null;
         this.vm.modelo = d.modelo || null;
-        this.vm.serie = d.serial
+        this.vm.serie = d.serial;
+        // TODO: si back devuelve nombre del estado, úsalo para pintar chip
+        // if (d?.estado_dispositivo) this.vm.estado = d.estado_dispositivo;
         this.loading.set(false);
       },
       error: _ => { this.detail.set(null); this.loading.set(false); }
@@ -68,6 +79,66 @@ export class DispositivoDetailDialog {
 
   /** Handy para re-cargar tras guardar en sub-dialogs */
   private reload() { this.load(); }
+
+  /** Cargar catálogo y mapear icono con tu estadoView */
+  private loadEstados() {
+    this.cat.estadosDispositivo().subscribe({
+      next: (es: Array<{ id: number; nombre: string }>) => {
+        const opts = es.map(e => ({
+          id: e.id,
+          label: e.nombre,
+          icon: estadoView(e.nombre).icon
+        }));
+        this.estadoOpts.set(opts);
+      },
+      error: _ => {
+        // fallback estático si algo falla
+        this.estadoOpts.set([
+          { id: 1, label: 'En Uso', icon: 'check_circle' },
+          { id: 2, label: 'En Reparación', icon: 'build' },
+          { id: 3, label: 'En Resguardo', icon: 'inventory_2' },
+        ]);
+      }
+    });
+  }
+
+  /** Estado activo: por id si viene en detail; si no, por label */
+  isActiveEstado(e: { id: number; label: string }) {
+    const d: any = this.detail();
+    if (d?.estado_dispositivo_id != null) return Number(d.estado_dispositivo_id) === e.id;
+    // fallback por texto (normaliza con tu util)
+    return this.estadoView(this.vm.estado).label === this.estadoView(e.label).label;
+  }
+
+  /** Cambiar estado con UI optimista + recarga de respaldo */
+  setEstado(e: { id: number; label: string }) {
+    if (this.isActiveEstado(e)) return;
+
+    this.changingEstado = true;
+
+    // pinta optimista en cabecera
+    const prev = this.vm.estado;
+    this.vm.estado = e.label;
+
+    const dispositivoDetail = this.detail();
+
+    this.api.cambiarAsignacion(
+      Number(this.vm.id), // id del dispositivo 
+    {
+      persona_id: dispositivoDetail?.asignacion_actual?.persona_id || null,
+      lugar_especifico: this.vm.ubicacion || null,
+      estado_dispositivo_id: e.id,
+    }).subscribe({
+      next: _ => {
+        this.reload();            // refuerza consistencia (id/label)
+        this.changingEstado = false;
+      },
+      error: _ => {
+        this.vm.estado = prev || undefined;  // revertir si falla
+        this.changingEstado = false;
+      }
+    });
+  }
 
   // ===== Acciones: Resumen =====
   editResumen() {
@@ -86,7 +157,7 @@ export class DispositivoDetailDialog {
         serial: this.vm.serie ?? null,
         marca: this.vm.marca ?? null,
         modelo: this.vm.modelo ?? null,
-        // macs: this.vm.macs ?? [] // aqui no encuentro donde cachar las macs
+        macs: this.nicList() ?? [] // aqui no encuentro donde cachar las macs
       }
     }).afterClosed().subscribe(ok => { if (ok) this.reload(); });
   }
