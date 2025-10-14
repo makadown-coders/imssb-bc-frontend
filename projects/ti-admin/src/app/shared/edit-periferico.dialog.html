@@ -1,1 +1,32 @@
-edit-periferico works!
+<div mat-dialog-title>{{ title }}</div>
+<div mat-dialog-content>
+  <form [formGroup]="f" class="grid">
+    <mat-form-field class="full" appearance="fill">
+      <mat-label>Tipo</mat-label>
+      <mat-select formControlName="tipo_id" required>
+        <mat-option *ngFor="let t of tipos()" [value]="t.value">{{ t.label }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field class="full" appearance="fill">
+      <mat-label>Serie</mat-label>
+      <input matInput formControlName="serial">
+    </mat-form-field>
+
+    <mat-form-field class="full" appearance="fill">
+      <mat-label>Marca</mat-label>
+      <input matInput formControlName="marca">
+    </mat-form-field>
+
+    <mat-form-field class="full" appearance="fill">
+      <mat-label>Modelo</mat-label>
+      <input matInput formControlName="modelo">
+    </mat-form-field>
+  </form>
+</div>
+<div mat-dialog-actions align="end">
+  <button mat-stroked-button type="button" (click)="close()">Cancelar</button>
+  <button mat-flat-button color="primary" type="button" (click)="save()" [disabled]="f.invalid || saving()">
+    Guardar
+  </button>
+</div>

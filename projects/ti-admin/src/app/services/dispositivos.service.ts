@@ -51,4 +51,17 @@ export class DispositivosService {
       ? this.http.put<{ ok: boolean; id: number }>(`${this.base}/api/dispositivos/${id}/perifericos/${p.id}`, p)
       : this.http.post<{ ok: boolean; id: number }>(`${this.base}/api/dispositivos/${id}/perifericos`, p);
   }
+
+  deleteMonitor(dispositivoId: number, monitorId: number) {
+    return this.http.delete<{ ok: boolean; id?: number }>(
+      `${this.base}/api/dispositivos/${dispositivoId}/monitores/${monitorId}`
+    );
+  }
+
+  deletePeriferico(dispositivoId: number, perifericoId: number) {
+    return this.http.delete<{ ok: boolean; id?: number }>(
+      `${this.base}/api/dispositivos/${dispositivoId}/perifericos/${perifericoId}`
+    );
+  }
+
 }

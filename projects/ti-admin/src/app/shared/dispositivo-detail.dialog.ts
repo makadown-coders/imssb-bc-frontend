@@ -21,6 +21,8 @@ import { EditPerifericoDialog } from './edit-periferico.dialog';
 import { EditDispositivoDialog } from './edit-dispositivo.dialog';
 import { MatMenuModule } from '@angular/material/menu';
 import { CatalogosService } from '../services/catalogos.service';
+import { ConfirmDialog } from './confirm-dialog';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 @Component({
   standalone: true,
@@ -37,10 +39,12 @@ export class DispositivoDetailDialog {
   private api = inject(DispositivosService);
   private cat = inject(CatalogosService);
   private dialog = inject(MatDialog);
+  private _snackBar = inject(MatSnackBar);
 
   loading = signal(true);
   detail = signal<DispositivoDetail | null>(null);
   estadoView = estadoView;
+  tabIndex = signal(0);
 
   changingEstado = false;
   // menú de estados (desde catálogo)
@@ -124,20 +128,20 @@ export class DispositivoDetailDialog {
 
     this.api.cambiarAsignacion(
       Number(this.vm.id), // id del dispositivo 
-    {
-      persona_id: dispositivoDetail?.asignacion_actual?.persona_id || null,
-      lugar_especifico: this.vm.ubicacion || null,
-      estado_dispositivo_id: e.id,
-    }).subscribe({
-      next: _ => {
-        this.reload();            // refuerza consistencia (id/label)
-        this.changingEstado = false;
-      },
-      error: _ => {
-        this.vm.estado = prev || undefined;  // revertir si falla
-        this.changingEstado = false;
-      }
-    });
+      {
+        persona_id: dispositivoDetail?.asignacion_actual?.persona_id || null,
+        lugar_especifico: this.vm.ubicacion || null,
+        estado_dispositivo_id: e.id,
+      }).subscribe({
+        next: _ => {
+          this.reload();            // refuerza consistencia (id/label)
+          this.changingEstado = false;
+        },
+        error: _ => {
+          this.vm.estado = prev || undefined;  // revertir si falla
+          this.changingEstado = false;
+        }
+      });
   }
 
   // ===== Acciones: Resumen =====
@@ -184,7 +188,12 @@ export class DispositivoDetailDialog {
       width: '560px',
       maxWidth: '98vw',
       data: { dispositivo_id: Number(this.vm.id), monitor: null }
-    }).afterClosed().subscribe(ok => { if (ok) this.reload(); });
+    }).afterClosed().subscribe(ok => {
+      if (ok) {
+        this._snackBar.open('Monitor agregado', 'Cerrar');
+        this.reload();
+      }
+    });
   }
 
   editMonitor(m: any) {
@@ -192,7 +201,12 @@ export class DispositivoDetailDialog {
       width: '560px',
       maxWidth: '98vw',
       data: { dispositivo_id: Number(this.vm.id), monitor: m }
-    }).afterClosed().subscribe(ok => { if (ok) this.reload(); });
+    }).afterClosed().subscribe(ok => {
+      if (ok) {
+        this._snackBar.open('Monitor guardado', 'Cerrar');
+        this.reload();
+      }
+    });
   }
 
   // ===== Acciones: Periféricos =====
@@ -201,7 +215,12 @@ export class DispositivoDetailDialog {
       width: '560px',
       maxWidth: '98vw',
       data: { dispositivo_id: Number(this.vm.id), periferico: null }
-    }).afterClosed().subscribe(ok => { if (ok) this.reload(); });
+    }).afterClosed().subscribe(ok => {
+      if (ok) {
+        this._snackBar.open('Periférico agregado', 'Cerrar');
+        this.reload();
+      }
+    });
   }
 
   editPeriferico(p: any) {
@@ -209,7 +228,12 @@ export class DispositivoDetailDialog {
       width: '560px',
       maxWidth: '98vw',
       data: { dispositivo_id: Number(this.vm.id), periferico: p }
-    }).afterClosed().subscribe(ok => { if (ok) this.reload(); });
+    }).afterClosed().subscribe(ok => {
+      if (ok) {
+        this._snackBar.open('Periférico guardado', 'Cerrar');
+        this.reload();
+      }
+    });
   }
 
   // Reutiliza tus helpers si quieres coherencia visual:
@@ -247,5 +271,48 @@ export class DispositivoDetailDialog {
       case 'ethernet': return 'Ethernet';
       default: return 'Otro';
     }
+  }
+
+  deleteMonitor(m: any) {
+    const dispositivoId = Number(this.vm.id);
+    if (!m?.id) return;
+
+    // Confirmación simple. Si prefieres un MatDialog bonito, te lo paso después.
+    //const ok = window.confirm('¿Eliminar este monitor? Esta acción no se puede deshacer.');
+    this.dialog.open(ConfirmDialog, {
+      data: {
+        title: 'Eliminar monitor',
+        message: '¿Seguro que deseas eliminar este monitor?'
+      }
+    }).afterClosed().subscribe(ok => {
+      if (!ok) return;
+
+      this.api.deleteMonitor(dispositivoId, Number(m.id)).subscribe({
+        next: _ => {
+          this._snackBar.open('Monitor eliminado', 'Cerrar');
+          this.reload();
+        },
+        error: _ => {
+          // opcional: MatSnackBar
+          console.error('No se pudo eliminar el monitor');
+        }
+      });
+    });
+  }
+
+  deletePeriferico(p: any) {
+    const dispositivoId = Number(this.vm.id);
+    if (!p?.id) return;
+
+    this.dialog.open(ConfirmDialog, {
+      data: { title: 'Eliminar periférico', message: '¿Seguro que deseas eliminar este periférico?' }
+    }).afterClosed().subscribe(ok => {
+      if (!ok) return;
+
+      this.api.deletePeriferico(dispositivoId, Number(p.id)).subscribe({
+        next: _ => { this._snackBar.open('Periférico eliminado', 'Cerrar'); this.reload(); },
+        error: _ => console.error('No se pudo eliminar el periférico')
+      });
+    });
   }
 }

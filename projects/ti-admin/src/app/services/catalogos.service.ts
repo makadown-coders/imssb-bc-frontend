@@ -1,6 +1,7 @@
+// projects/ti-admin/src/app/services/catalogos.service.ts
 import { HttpClient } from "@angular/common/http";
 import { Injectable, inject } from "@angular/core";
-import { Observable, map } from "rxjs";
+import { Observable, catchError, map, of } from "rxjs";
 import { EstadoDispositivo } from "../models/EstadoDispositivo";
 import { Localidad } from "../models/Localidad";
 import { Municipio } from "../models/Municipio";
@@ -9,6 +10,7 @@ import { TipoDispositivo } from "../models/TipoDispositivo";
 import { TipoUnidad } from "../models/TipoUnidad";
 import { UnidadMedica } from "../models/UnidadMedica";
 import { RuntimeConfigService } from "./runtime-config.service";
+import { TipoPeriferico } from "../models/TipoPeriferico";
 
 @Injectable({ providedIn: 'root' })
 export class CatalogosService {
@@ -53,5 +55,21 @@ export class CatalogosService {
         p.set('pageSize', String(opts.pageSize ?? 20));
         return this.http.get<Page<UnidadMedica>>(`${this.base}/api/ti/unidades?${p.toString()}`)
             .pipe(map(r => ({ ...r, items: r.items ?? [] })));
+    }
+
+    /** Tipos de periférico: hoy puede ser fallback estático; mañana, API real */
+    tiposPeriferico() {
+        return this.http.get<TipoPeriferico[]>(`${this.base}/api/catalogos/tipos-periferico`).pipe(
+            catchError(() => 
+                of([]) // fallback vacío
+                // of(['MOUSE', 'TECLADO', 'CAMARA', 'MICROFONO', 'HEADSET'])) // fallback
+        ));
+    }
+
+    /** Opcional: si prefieres SelectOpt para ligarlo a mat-select con label/value */
+    tiposPerifericoOpts() {
+        return this.tiposPeriferico().pipe(
+            map(arr => arr.map(n => ({ value: n, label: n })))
+        );
     }
 }

@@ -22,6 +22,10 @@ $theme-dark: mat.define-theme((color: (theme-type: dark, primary: $primary, tert
     /* ===== LIGHT ===== */
     :root {
         @include mat.all-component-themes($theme-light);
+        @include mat.snack-bar-overrides((button-color: #000000,
+                supporting-text-color: #000000,
+                container-color: var(--brand-btn-fg),
+            ));
 
         /* ===== TextField (FILLED) tokens ===== */
         --mdc-filled-text-field-container-color: rgba(255, 255, 255, .92);
@@ -216,6 +220,10 @@ $theme-dark: mat.define-theme((color: (theme-type: dark, primary: $primary, tert
     /* ===== DARK ===== */
     body.dark-theme {
         @include mat.all-component-colors($theme-dark);
+        @include mat.snack-bar-overrides((button-color: #ffffff,
+                supporting-text-color: #ffffff,
+                container-color: var(--brand-btn-bg),
+            ));
 
         --mdc-filled-text-field-container-color: rgba(255, 255, 255, .06);
         --mdc-filled-text-field-input-text-color: var(--text-strong);
@@ -554,8 +562,14 @@ $theme-dark: mat.define-theme((color: (theme-type: dark, primary: $primary, tert
         }
 
         /* ==== Fix labels/inputs de mat-form-field (filled) DENTRO de diálogos en oscuro ==== */
-        .mat-dialog-title, .muted, .row-right,
-        .mdc-button__label, .mat-icon-no-color, .mac-chip,
+        .mat-dialog-title,
+        .muted,
+        .row-right,
+        .hint,
+        .mdc-dialog__content,
+        .mdc-button__label,
+        .mat-icon-no-color,
+        .mac-chip,
         .mat-mdc-dialog-container .mat-mdc-form-field .mdc-floating-label,
         .mat-mdc-dialog-container .mat-mdc-form-field .mdc-floating-label--float-above {
             /* usa tus tokens ya definidos para dark */
@@ -564,32 +578,50 @@ $theme-dark: mat.define-theme((color: (theme-type: dark, primary: $primary, tert
             /* por si alguna regla les baja opacidad */
         }
 
-        .mat-dialog-title, .muted, .row-right,
-        .mdc-button__label, .mat-icon-no-color, .mac-chip,
+        .mat-dialog-title,
+        .muted,
+        .row-right,
+        .hint,
+        .mdc-dialog__content,
+        .mdc-button__label,
+        .mat-icon-no-color,
+        .mac-chip,
         .mat-mdc-dialog-container .mat-mdc-form-field.mat-focused .mdc-floating-label,
         .mat-mdc-dialog-container .mat-mdc-form-field.mat-focused .mdc-floating-label--float-above {
             color: var(--mdc-filled-text-field-focus-label-text-color) !important;
         }
 
         /* Texto dentro del input */
-        .mat-dialog-title, .muted, .row-right,
-        .mdc-button__label, .mat-icon-no-color, .mac-chip,
+        .mat-dialog-title,
+        .muted,
+        .row-right,
+        .hint,
+        .mdc-dialog__content,
+        .mdc-button__label,
+        .mat-icon-no-color,
+        .mac-chip,
         .mat-mdc-dialog-container .mat-mdc-input-element {
             color: var(--mdc-filled-text-field-input-text-color) !important;
         }
 
-        /* Línea activa inferior del modo filled (el “ripple”) */        
+        /* Línea activa inferior del modo filled (el “ripple”) */
         .mat-mdc-dialog-container .mdc-line-ripple {
             background-color: var(--mdc-filled-text-field-active-indicator-color) !important;
         }
-        
+
         .mat-mdc-dialog-container .mat-mdc-form-field.mat-focused .mdc-line-ripple {
             background-color: var(--mdc-filled-text-field-focus-active-indicator-color) !important;
         }
 
         /* Subtexto/hints/errores debajo del campo */
-        .mat-dialog-title, .muted, .row-right, 
-        .mdc-button__label, .mat-icon-no-color, .mac-chip,
+        .mat-dialog-title,
+        .muted,
+        .row-right,
+        .hint,
+        .mdc-dialog__content,
+        .mdc-button__label,
+        .mat-icon-no-color,
+        .mac-chip,
         .mat-mdc-dialog-container .mat-mdc-form-field-subscript-wrapper,
         .mat-mdc-dialog-container .mat-mdc-form-field-error {
             color: var(--text-muted) !important;
@@ -1212,12 +1244,76 @@ $theme-dark: mat.define-theme((color: (theme-type: dark, primary: $primary, tert
 
     /********************* FIN SPINNER ********************/
 
-    .p-16{padding:16px}
-    .full{width:100%}
-    .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-    .grid-mac{display:grid;grid-template-columns:1.2fr 1fr auto;gap:12px;align-items:center}
-    .mac-row{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px dashed rgba(0,0,0,.08)}
-    .mac-row .spacer{flex:1}
-    .mac-chip{display:inline-flex;align-items:center;gap:6px;padding:2px 8px;border-radius:999px;border:1px solid var(--table-border)}
-    .muted{opacity:.8}
+    .p-16 {
+        padding: 16px
+    }
+
+    .full {
+        width: 100%
+    }
+
+    .grid-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px
+    }
+
+    .grid-mac {
+        display: grid;
+        grid-template-columns: 1.2fr 1fr auto;
+        gap: 12px;
+        align-items: center
+    }
+
+    .mac-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 6px 0;
+        border-bottom: 1px dashed rgba(0, 0, 0, .08)
+    }
+
+    .mac-row .spacer {
+        flex: 1
+    }
+
+    .mac-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 2px 8px;
+        border-radius: 999px;
+        border: 1px solid var(--table-border)
+    }
+
+    .muted {
+        opacity: .8
+    }
+
+    .ti-detail-dialog .dd-tabs-wrap {
+        position: relative;
+        height: 100%;
+    }
+
+    .ti-detail-dialog .dd-tabs {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .ti-detail-dialog .dd-tabs .mat-mdc-tab-body-wrapper {
+        flex: 1 1 auto;
+        min-height: 0;
+    }
+
+    .ti-detail-dialog .dd-loading-ov {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: color-mix(in oklab, var(--mdc-dialog-container-color), transparent 50%);
+        backdrop-filter: blur(2px);
+        z-index: 3;
+    }
 }

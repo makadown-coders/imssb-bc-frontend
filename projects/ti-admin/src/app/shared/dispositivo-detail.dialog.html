@@ -15,7 +15,7 @@
             Responsable/Lugar: <strong>{{ vm.responsable_id || '—' }}</strong>
         </div>
     </div>
-    
+
     <!-- Chip clickable que abre menú -->
     <button class="chip" [ngClass]="estadoView(vm.estado).cls" [matMenuTriggerFor]="estadoMenu"
         [disabled]="changingEstado" matRipple aria-label="Cambiar estado">
@@ -42,16 +42,9 @@
 <div class="dd-content">
     <mat-divider class="dd-divider"></mat-divider>
 
-    <!-- loader -->
-    <ng-container *ngIf="loading(); else tabs">
-        <div class="dd-loading">
-            <mat-spinner diameter="32"></mat-spinner>
-        </div>
-    </ng-container>
-
     <!-- tabs -->
-    <ng-template #tabs>
-        <mat-tab-group class="dd-tabs">
+    <div class="dd-tabs-wrap">
+        <mat-tab-group class="dd-tabs" [selectedIndex]="tabIndex()" (selectedIndexChange)="tabIndex.set($event)">
             <!-- TAB: Resumen -->
             <mat-tab label="Resumen">
                 <div class="dd-tab-scroll">
@@ -151,6 +144,10 @@
                                 <button mat-icon-button (click)="editMonitor(m)" matTooltip="Editar monitor">
                                     <mat-icon>edit</mat-icon>
                                 </button>
+                                <button mat-icon-button color="warn" (click)="deleteMonitor(m)"
+                                    matTooltip="Eliminar monitor">
+                                    <mat-icon>delete</mat-icon>
+                                </button>
                             </td>
                         </ng-container>
 
@@ -193,9 +190,13 @@
                         <!-- Acciones -->
                         <ng-container matColumnDef="acciones">
                             <th mat-header-cell *matHeaderCellDef class="th-actions">Acciones</th>
-                            <td mat-cell *matCellDef="let p" class="td-actions">
-                                <button mat-icon-button (click)="editPeriferico(p)" matTooltip="Editar periférico">
+                            <td mat-cell *matCellDef="let m" class="td-actions">
+                                <button mat-icon-button (click)="editPeriferico(m)" matTooltip="Editar periférico">
                                     <mat-icon>edit</mat-icon>
+                                </button>
+                                <button mat-icon-button color="warn" (click)="deletePeriferico(m)"
+                                    matTooltip="Eliminar Periférico">
+                                    <mat-icon>delete</mat-icon>
                                 </button>
                             </td>
                         </ng-container>
@@ -206,5 +207,9 @@
                 </div>
             </mat-tab>
         </mat-tab-group>
-    </ng-template>
+        <!-- Overlay de carga (no destruye el tab-group) -->
+        <div class="dd-loading-ov" *ngIf="loading()">
+            <mat-spinner diameter="32"></mat-spinner>
+        </div>
+    </div>
 </div>
