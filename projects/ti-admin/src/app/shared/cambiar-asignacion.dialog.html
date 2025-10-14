@@ -1,1 +1,74 @@
-cambiarAsignacion works!
+<!-- projects/ti-admin/src/app/shared/cambiar-asignacion.dialog.html -->
+<h3 class="mat-title-medium" style="margin:12px 16px;">Cambiar asignación</h3>
+
+<div class="grid p-16">
+
+  <!-- UNIDAD (requerida) -->
+  <mat-form-field class="full" appearance="fill">
+    <mat-label>Unidad destino</mat-label>
+    <input matInput
+           [value]="unidadTerm()"
+           (input)="onUnidadInput($event)"
+           [matAutocomplete]="autoUnidad"
+           placeholder="Escribe para buscar unidad..." />
+    <button mat-icon-button matSuffix *ngIf="unidadTerm()" (click)="clearUnidad()" tabindex="-1" aria-label="Limpiar">
+      <mat-icon>close</mat-icon>
+    </button>
+    <mat-autocomplete #autoUnidad="matAutocomplete" (optionSelected)="chooseUnidad($event.option.value)">
+      <mat-option *ngFor="let u of unidadOpts()" [value]="u">
+        {{u.nombre}} <span *ngIf="u.municipio" class="muted"> · {{u.municipio}}</span>
+      </mat-option>
+    </mat-autocomplete>
+    <mat-hint *ngIf="!unidadSel()">Selecciona una unidad de la lista.</mat-hint>
+  </mat-form-field>
+
+  <!-- PERSONA (opcional, global) -->
+  <mat-form-field appearance="fill">
+    <mat-label>Persona (opcional)</mat-label>
+    <input matInput
+           [value]="personaTerm()"
+           (input)="onPersonaInput($event)"
+           [matAutocomplete]="autoPersona"
+           placeholder="Escribe para buscar persona..." />
+    <button mat-icon-button matSuffix *ngIf="personaTerm()" (click)="clearPersona()" tabindex="-1" aria-label="Limpiar">
+      <mat-icon>close</mat-icon>
+    </button>
+    <mat-autocomplete #autoPersona="matAutocomplete" (optionSelected)="choosePersona($event.option.value)">
+      <mat-option *ngFor="let p of personaOpts()" [value]="p">
+        {{p.nombre_completo}} <span *ngIf="p.unidad_medica" class="muted"> · {{p.unidad_medica}}</span>
+      </mat-option>
+    </mat-autocomplete>
+    <mat-hint>Si no existe la persona aún, déjalo vacío y usa “Lugar específico”.</mat-hint>
+  </mat-form-field>
+
+  <!-- LUGAR (opcional; usa “sin asignar” si todo vacío) -->
+  <mat-form-field appearance="fill">
+    <mat-label>Lugar específico (opcional)</mat-label>
+    <input matInput formControlName="lugar" placeholder="CEYES, Urgencias #2, 'sin asignar', etc." />
+  </mat-form-field>
+
+  <!-- ESTADO -->
+  <mat-form-field appearance="fill">
+    <mat-label>Estado del dispositivo</mat-label>
+    <mat-select formControlName="estado_id">
+      <mat-option [value]="null">— (sin cambio)</mat-option>
+      <mat-option *ngFor="let e of estados()" [value]="e.id">{{e.nombre}}</mat-option>
+    </mat-select>
+  </mat-form-field>
+
+  <!-- FECHA -->
+  <mat-form-field appearance="fill">
+    <mat-label>Fecha de asignación</mat-label>
+    <input matInput [matDatepicker]="dp" formControlName="fecha">
+    <mat-datepicker-toggle matSuffix [for]="dp"></mat-datepicker-toggle>
+    <mat-datepicker #dp></mat-datepicker>
+  </mat-form-field>
+
+  <div class="full" style="display:flex; justify-content:flex-end; gap:8px; margin-top:6px;">
+    <button mat-stroked-button type="button" (click)="ref.close(false)">Cancelar</button>
+    <button mat-flat-button color="primary" type="button"
+            [disabled]="!unidadSel() || saving()" (click)="save()">
+      Guardar
+    </button>
+  </div>
+</div>

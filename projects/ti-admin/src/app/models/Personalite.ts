@@ -1,0 +1,1 @@
+export type PersonaLite = { id: number; nombre_completo: string; unidad_medica?: string };

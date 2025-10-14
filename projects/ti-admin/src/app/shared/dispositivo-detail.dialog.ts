@@ -174,10 +174,11 @@ export class DispositivoDetailDialog {
       width: '640px',
       maxWidth: '98vw',
       data: {
-        id: Number(this.vm.id),
-        // estado_dispositivo_id: d.estado_dispositivo_id ?? null,
-        persona_nombre_completo: this.vm.responsable_id || null,
-        //lugar_especifico: d.lugar_especifico || null
+         id: Number(this.vm.id),
+      unidad_medica_id: d.unidad_medica_id ?? null,      // 👈 si tu /api/dispositivos/:id trae esto
+      unidad_medica_label: (this.vm.ubicacion ?? null),
+      estado_dispositivo_id: d.asignacion_actual?.estado_dispositivo_id ?? null,
+      persona_nombre_completo: this.vm.responsable_id || null,
       }
     }).afterClosed().subscribe(ok => { if (ok) this.reload(); });
   }

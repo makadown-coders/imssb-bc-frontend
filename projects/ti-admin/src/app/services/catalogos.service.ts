@@ -60,16 +60,25 @@ export class CatalogosService {
     /** Tipos de periférico: hoy puede ser fallback estático; mañana, API real */
     tiposPeriferico() {
         return this.http.get<TipoPeriferico[]>(`${this.base}/api/catalogos/tipos-periferico`).pipe(
-            catchError(() => 
+            catchError(() =>
                 of([]) // fallback vacío
                 // of(['MOUSE', 'TECLADO', 'CAMARA', 'MICROFONO', 'HEADSET'])) // fallback
-        ));
+            ));
     }
 
     /** Opcional: si prefieres SelectOpt para ligarlo a mat-select con label/value */
     tiposPerifericoOpts() {
         return this.tiposPeriferico().pipe(
             map(arr => arr.map(n => ({ value: n, label: n })))
+        );
+    }
+    personas(opts: { q?: string | null; page?: number; pageSize?: number }) {
+        const p = new URLSearchParams();
+        if (opts.q?.trim()) p.set('q', opts.q.trim());
+        p.set('page', String(opts.page ?? 1));
+        p.set('pageSize', String(opts.pageSize ?? 20));
+        return this.http.get<{ items: { id: number; nombre_completo: string; unidad_medica?: string }[], page: number, pageSize: number, total: number }>(
+            `${this.base}/api/ti/personas?${p.toString()}`
         );
     }
 }
