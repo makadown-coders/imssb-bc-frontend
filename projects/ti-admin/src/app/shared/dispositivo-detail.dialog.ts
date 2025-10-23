@@ -73,8 +73,14 @@ export class DispositivoDetailDialog {
         this.vm.marca = d.marca || null;
         this.vm.modelo = d.modelo || null;
         this.vm.serie = d.serial;
-        // TODO: si back devuelve nombre del estado, úsalo para pintar chip
-        // if (d?.estado_dispositivo) this.vm.estado = d.estado_dispositivo;
+        
+        if (d?.asignacion_actual) {
+          const estado = this.estadoOpts()
+              .find(e => e.id === d.asignacion_actual!.estado_dispositivo_id)
+          this.vm.estado = estado ? estado.label : 'caca';
+          this.vm.responsable_id = d.asignacion_actual.nombre_completo ||
+                d.asignacion_actual.lugar_especifico || '—'
+        }
         this.loading.set(false);
       },
       error: _ => { this.detail.set(null); this.loading.set(false); }
@@ -87,7 +93,7 @@ export class DispositivoDetailDialog {
   /** Cargar catálogo y mapear icono con tu estadoView */
   private loadEstados() {
     this.cat.estadosDispositivo().subscribe({
-      next: (es: Array<{ id: number; nombre: string }>) => {
+      next: (es: Array<{ id: number; nombre: string }>) => {        
         const opts = es.map(e => ({
           id: e.id,
           label: e.nombre,
@@ -180,7 +186,10 @@ export class DispositivoDetailDialog {
       estado_dispositivo_id: d.asignacion_actual?.estado_dispositivo_id ?? null,
       persona_nombre_completo: this.vm.responsable_id || null,
       }
-    }).afterClosed().subscribe(ok => { if (ok) this.reload(); });
+    }).afterClosed().subscribe(ok => { if (ok) {
+      this._snackBar.open('Asignación actualizada', 'Cerrar');      
+      this.reload();
+    } });
   }
 
   // ===== Acciones: Monitores =====

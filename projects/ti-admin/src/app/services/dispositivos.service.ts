@@ -35,6 +35,19 @@ export class DispositivosService {
     return this.http.get<DispositivoDetail>(`${this.base}/api/dispositivos/${id}`);
   }
 
+  create(body: {
+    unidad_medica_id: number | null;
+    tipo_dispositivo_id: number;
+    serial?: string | null;
+    marca?: string | null;
+    modelo?: string | null;
+    ip?: string | null;
+    conexion?: string | null;
+    observaciones?: string | null;
+  }) {
+    return this.http.post<{ id: number }>(`${this.base}/api/dispositivos`, body);
+  }
+
   updateBasic(id: number, body: any) {
     return this.http.put<{ ok: boolean; id: number }>(`${this.base}/api/dispositivos/${id}`, body);
   }

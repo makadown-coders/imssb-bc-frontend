@@ -1,70 +1,88 @@
-<h2 mat-dialog-title>{{ data.mode === 'create' ? 'Agregar equipo' : 'Editar equipo' }}</h2>
-  <form [formGroup]="form" class="grid gap-3 p-1" (ngSubmit)="save()">
-    <mat-form-field appearance="outline">
-      <mat-label>Etiqueta</mat-label>
-      <input matInput formControlName="etiqueta" required>
-    </mat-form-field>
+<!-- projects/ti-admin/src/app/shared/equipo-dialog.html -->
+<div mat-dialog-title class="hdr">
+  <mat-icon class="hdr-icn">add_box</mat-icon>
+  <div class="hdr-title">{{ data?.mode === 'edit' ? 'Editar equipo' : 'Agregar equipo' }}</div>
+</div>
 
-    <mat-form-field appearance="outline">
-      <mat-label>Serie</mat-label>
-      <input matInput formControlName="serie">
-    </mat-form-field>
+<form [formGroup]="form" (ngSubmit)="save()" mat-dialog-content class="content">
 
-    <mat-form-field appearance="outline">
+  <!-- UNIDAD (autocomplete) -->
+  <mat-form-field class="full" appearance="fill">
+    <mat-label>Unidad destino</mat-label>
+    <input matInput
+           [value]="unidadTerm()"
+           (input)="onUnidadInput($event)"
+           [matAutocomplete]="autoUnidad"
+           placeholder="Escribe para buscar unidad..." />
+    <button mat-icon-button matSuffix *ngIf="unidadTerm()" (click)="clearUnidad()" tabindex="-1" aria-label="Limpiar">
+      <mat-icon>close</mat-icon>
+    </button>
+    <mat-autocomplete #autoUnidad="matAutocomplete" (optionSelected)="chooseUnidad($event.option.value)">
+      <mat-option *ngFor="let u of unidadOpts()" [value]="u">
+        {{u.nombre}} <span *ngIf="u.municipio" class="muted"> · {{u.municipio}}</span>
+      </mat-option>
+    </mat-autocomplete>
+    <mat-hint *ngIf="!form.get('unidad_medica_id')?.value">Selecciona una unidad de la lista.</mat-hint>
+    <mat-error *ngIf="form.get('unidad_medica_id')?.invalid && form.get('unidad_medica_id')?.touched">
+      La unidad es obligatoria.
+    </mat-error>
+  </mat-form-field>
+
+  <!-- TIPO + SERIE -->
+  <div class="grid-2">
+    <mat-form-field appearance="fill">
       <mat-label>Tipo</mat-label>
-      <mat-select formControlName="tipo" required>
-        <mat-option value="PC">PC</mat-option>
-        <mat-option value="LAPTOP">LAPTOP</mat-option>
-        <mat-option value="IMPRESORA">IMPRESORA</mat-option>
-        <mat-option value="ROUTER">ROUTER</mat-option>
-        <mat-option value="SWITCH">SWITCH</mat-option>
-        <mat-option value="OTRO">OTRO</mat-option>
+      <mat-select formControlName="tipo_dispositivo_id" required>
+        <mat-option *ngFor="let t of tipoOpts()" [value]="t.id">{{ t.nombre }}</mat-option>
       </mat-select>
+      <mat-error *ngIf="form.get('tipo_dispositivo_id')?.invalid && form.get('tipo_dispositivo_id')?.touched">
+        Selecciona un tipo.
+      </mat-error>
     </mat-form-field>
 
-    <div class="grid grid-cols-2 gap-3">
-      <mat-form-field appearance="outline">
-        <mat-label>Marca</mat-label>
-        <input matInput formControlName="marca">
-      </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>Modelo</mat-label>
-        <input matInput formControlName="modelo">
-      </mat-form-field>
-    </div>
+    <mat-form-field appearance="fill">
+      <mat-label>Serie</mat-label>
+      <input matInput formControlName="serial" />
+    </mat-form-field>
+  </div>
 
-    <mat-form-field appearance="outline">
-      <mat-label>Estado</mat-label>
-      <mat-select formControlName="estado" required>
-        <mat-option value="OPERATIVO">OPERATIVO</mat-option>
-        <mat-option value="MANTENIMIENTO">MANTENIMIENTO</mat-option>
-        <mat-option value="BAJA">BAJA</mat-option>
-        <mat-option value="EXTRAVIADO">EXTRAVIADO</mat-option>
-      </mat-select>
+  <!-- MARCA + MODELO -->
+  <div class="grid-2">
+    <mat-form-field appearance="fill">
+      <mat-label>Marca</mat-label>
+      <input matInput formControlName="marca" />
     </mat-form-field>
 
-    <mat-form-field appearance="outline">
-      <mat-label>Unidad (ID)</mat-label>
-      <input matInput formControlName="unidad_id">
+    <mat-form-field appearance="fill">
+      <mat-label>Modelo</mat-label>
+      <input matInput formControlName="modelo" />
+    </mat-form-field>
+  </div>
+
+  <!-- IP + CONEXIÓN -->
+  <div class="grid-2">
+    <mat-form-field appearance="fill">
+      <mat-label>IP</mat-label>
+      <input matInput formControlName="ip" />
     </mat-form-field>
 
-    <mat-form-field appearance="outline">
-      <mat-label>Ubicación</mat-label>
-      <input matInput formControlName="ubicacion">
+    <mat-form-field appearance="fill">
+      <mat-label>Conexión</mat-label>
+      <input matInput formControlName="conexion" />
     </mat-form-field>
+  </div>
 
-    <mat-form-field appearance="outline">
-      <mat-label>Responsable (ID)</mat-label>
-      <input matInput formControlName="responsable_id">
-    </mat-form-field>
+  <!-- OBS -->
+  <mat-form-field class="full" appearance="fill">
+    <mat-label>Observaciones</mat-label>
+    <textarea matInput rows="3" formControlName="observaciones"></textarea>
+  </mat-form-field>
+</form>
 
-    <mat-form-field appearance="outline">
-      <mat-label>Notas</mat-label>
-      <input matInput formControlName="notas">
-    </mat-form-field>
-
-    <div class="flex justify-end gap-2 mt-2">
-      <button mat-stroked-button type="button" (click)="close()">Cancelar</button>
-      <button mat-raised-button color="primary" type="submit" [disabled]="form.invalid">Guardar</button>
-    </div>
-  </form>
+<div mat-dialog-actions align="end">
+  <button mat-stroked-button type="button" (click)="close()">Cancelar</button>
+  <button mat-flat-button color="primary" type="submit"
+          [disabled]="form.invalid" (click)="save()" cdkFocusInitial>
+    Guardar
+  </button>
+</div>

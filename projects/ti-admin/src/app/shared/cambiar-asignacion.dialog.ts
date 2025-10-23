@@ -4,7 +4,7 @@ import { Component, inject, Inject, OnInit, signal } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatButtonModule } from '@angular/material/button';
-import { MatNativeDateModule } from '@angular/material/core';
+import { MAT_DATE_FORMATS, MAT_DATE_LOCALE, MatNativeDateModule, provideNativeDateAdapter } from '@angular/material/core';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -15,6 +15,7 @@ import { EstadoDispositivo, UnidadMedica } from '../models';
 import { PersonaLite } from '../models/Personalite';
 import { CatalogosService } from '../services/catalogos.service';
 import { DispositivosService } from '../services/dispositivos.service';
+import { IMSSBBC_DATE_FORMATS } from './IMSSBBC-date-formats';
 
 @Component({
     standalone: true,
@@ -22,6 +23,10 @@ import { DispositivosService } from '../services/dispositivos.service';
         MatDialogModule, MatFormFieldModule, MatInputModule, MatSelectModule,
         MatAutocompleteModule, MatDatepickerModule, MatNativeDateModule,
         MatIconModule, MatButtonModule],
+    providers: [provideNativeDateAdapter(),
+    { provide: MAT_DATE_FORMATS, useValue: IMSSBBC_DATE_FORMATS },
+    { provide: MAT_DATE_LOCALE, useValue: 'es-MX' }
+    ],
     selector: 'ti-cambiar-asignacion-dialog',
     templateUrl: 'cambiar-asignacion.dialog.html'
 })

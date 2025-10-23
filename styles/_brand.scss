@@ -160,7 +160,9 @@ $theme-dark: mat.define-theme((color: (theme-type: dark, primary: $primary, tert
         --mat-option-selected-state-label-text-color: var(--text-strong);
         --mat-option-hover-state-layer-color: rgba(0, 0, 0, .05);
         --mat-option-focus-state-layer-color: rgba(0, 0, 0, .06);
-
+    
+        .mat-datepicker-content,
+        .mat-mdc-autocomplete-panel,
         .mat-mdc-select-panel {
             background-color: var(--mat-select-panel-background-color, var(--surface-1)) !important;
             color: var(--mat-select-panel-text-color, var(--text-strong)) !important;
@@ -554,6 +556,8 @@ $theme-dark: mat.define-theme((color: (theme-type: dark, primary: $primary, tert
         }
 
         /* Menú contextual (mat-menu) coherente con oscuro */
+        .mat-datepicker-content,
+        .mat-mdc-autocomplete-panel,
         .mat-mdc-menu-panel {
             background-color: var(--menu-bg) !important;
             color: var(--text-strong) !important;

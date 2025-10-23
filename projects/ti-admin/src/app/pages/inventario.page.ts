@@ -28,6 +28,7 @@ import { DispositivoRowEx } from '../models/DispositivoRowEx';
 import { BehaviorSubject, pipe, Subject, takeUntil } from 'rxjs';
 import { DispositivoDetailDialog } from '../shared/dispositivo-detail.dialog';
 import { estadoView, iconForEstado } from '../shared/estado.utils';
+import { MatDatepickerModule } from '@angular/material/datepicker';
 
 @Component({
   standalone: true,
@@ -39,6 +40,7 @@ import { estadoView, iconForEstado } from '../shared/estado.utils';
     MatSelectModule, MatMenuModule, MatTooltipModule, MatDividerModule, MatRippleModule,
     MatDialogModule, MatSnackBarModule,
   ],
+ // providers: [MatDatepickerModule],
   templateUrl: './inventario.page.html',
   styleUrls: ['./inventario.page.scss']
 })
