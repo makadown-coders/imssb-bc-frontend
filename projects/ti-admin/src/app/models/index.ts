@@ -16,3 +16,4 @@ export * from './DispositivoDetail';
 export * from './Monitor';
 export * from './Periferico';
 export * from './EstadoView';
+export * from './Personalite';

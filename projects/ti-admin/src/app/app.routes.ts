@@ -13,7 +13,8 @@ export const routes: Routes = [
     children: [
       { path: '', pathMatch: 'full', redirectTo: 'inventario' }, // redirect desde /ti
       { path: 'inventario', loadComponent: () => import('./pages/inventario.page').then(m => m.InventarioPage) },
-      { path: 'asignaciones', loadComponent: () => import('./pages/placeholder-asignaciones').then(m => m.AsignacionesPage) },
+      { path: 'personas',   loadComponent: () => import('./pages/personas.page').then(m => m.PersonasPage) },
+      { path: 'usuarios',   loadComponent: () => import('./pages/usuarios.page').then(m => m.UsuariosPage) }, // placeholder      
       { path: 'ajustes', loadComponent: () => import('./pages/placeholder-ajustes').then(m => m.AjustesPage) },
     ]
   },

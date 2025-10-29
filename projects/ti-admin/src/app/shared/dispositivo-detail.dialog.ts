@@ -77,7 +77,7 @@ export class DispositivoDetailDialog {
         if (d?.asignacion_actual) {
           const estado = this.estadoOpts()
               .find(e => e.id === d.asignacion_actual!.estado_dispositivo_id)
-          this.vm.estado = estado ? estado.label : 'caca';
+          this.vm.estado = estado ? estado.label : 'En Resguardo';
           this.vm.responsable_id = d.asignacion_actual.nombre_completo ||
                 d.asignacion_actual.lugar_especifico || '—'
         }

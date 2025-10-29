@@ -57,6 +57,11 @@ export class EquipoDialog {
     if (data?.value) {
       this.form.patchValue(data.value);
       if ((data.value as any)?.unidad_label) this.unidadTerm.set((data.value as any).unidad_label);
+    } else {
+      // modo 'create' - limpio unidad
+      this.clearUnidad();
+      // inicializo data
+      this.data = { mode: 'create' };
     }
   }
 

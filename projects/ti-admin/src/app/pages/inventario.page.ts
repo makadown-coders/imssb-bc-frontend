@@ -15,20 +15,15 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatRippleModule } from '@angular/material/core';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { TiService } from '../services/ti.service';
 import { EquipoDialog } from '../shared/equipo-dialog';
-import { Equipo } from '../models/Equipo';
-import { EstadoKey } from '../models/EstadoKey';
-import { TipoKey } from '../models/TipoKey';
-import { DispositivoRow, EquipoVM, EstadoDispositivo, Page, SelectOpt, TipoDispositivo } from '../models';
+import { EquipoVM, EstadoDispositivo, Page, SelectOpt, TipoDispositivo } from '../models';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { CatalogosService } from '../services/catalogos.service';
 import { DispositivosService } from '../services/dispositivos.service';
 import { DispositivoRowEx } from '../models/DispositivoRowEx';
-import { BehaviorSubject, pipe, Subject, takeUntil } from 'rxjs';
+import { Subject, takeUntil } from 'rxjs';
 import { DispositivoDetailDialog } from '../shared/dispositivo-detail.dialog';
 import { estadoView, iconForEstado } from '../shared/estado.utils';
-import { MatDatepickerModule } from '@angular/material/datepicker';
 
 @Component({
   standalone: true,
@@ -40,14 +35,14 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
     MatSelectModule, MatMenuModule, MatTooltipModule, MatDividerModule, MatRippleModule,
     MatDialogModule, MatSnackBarModule,
   ],
- // providers: [MatDatepickerModule],
+  // providers: [MatDatepickerModule],
   templateUrl: './inventario.page.html',
   styleUrls: ['./inventario.page.scss']
 })
 export class InventarioPage implements OnInit, OnDestroy {
 
-  private api = inject(DispositivosService);
-  private cat = inject(CatalogosService);
+  private dispositivoService = inject(DispositivosService);
+  private catalogoService = inject(CatalogosService);
   private dialog = inject(MatDialog);
   private snack = inject(MatSnackBar);
 
@@ -71,18 +66,18 @@ export class InventarioPage implements OnInit, OnDestroy {
   // (opcional) un icono por defecto cuando es "Todos los tipos"
   public readonly defaultTipoIcon = 'devices_other';
 
-  displayedColumns = ['tipo', 
-    'modelo', 
-    'serie', 
-    'ubicacion', 
-    'responsable', 
+  displayedColumns = ['tipo',
+    'modelo',
+    'serie',
+    'ubicacion',
+    'responsable',
     'estado'/*, 'acciones'*/];
 
   $onDestroy = new Subject<void>();
 
   ngOnInit(): void {
     // Cargar opciones de Tipo
-    this.cat.tiposDispositivo().pipe(
+    this.catalogoService.tiposDispositivo().pipe(
       takeUntil(this.$onDestroy)
     ).subscribe((ts: TipoDispositivo[]) => {
       const opts: SelectOpt[] = [
@@ -94,7 +89,7 @@ export class InventarioPage implements OnInit, OnDestroy {
     });
 
     // Cargar opciones de Estado
-    this.cat.estadosDispositivo().pipe(
+    this.catalogoService.estadosDispositivo().pipe(
       takeUntil(this.$onDestroy)
     ).subscribe((es: EstadoDispositivo[]) => {
       const opts: SelectOpt[] = [
@@ -151,7 +146,7 @@ export class InventarioPage implements OnInit, OnDestroy {
     const tipoId = this.tipo() ? Number(this.tipo()) : null;
     const estadoId = this.estado() ? Number(this.estado()) : null;
 
-    this.api.list({
+    this.dispositivoService.list({
       q,
       tipo_dispositivo_id: tipoId ?? undefined,
       estado_dispositivo_id: estadoId ?? undefined,
@@ -169,13 +164,16 @@ export class InventarioPage implements OnInit, OnDestroy {
         this.items.set([]); this.total.set(0); this.vms.set([]);
       }
     });
-  }, { allowSignalWrites: true });
+  }//, { allowSignalWrites: true }
+  );
 
   // resetear a la primera página cuando cambian filtros
   private readonly _resetPageOnFilter = effect(() => {
+    console.log('InventarioPage: _resetPageOnFilter disparado');
     this.q(); this.tipo(); this.estado();
     this.pageIndex.set(0);
-  }, { allowSignalWrites: true });
+  } // , { allowSignalWrites: true }
+  );
 
   onPage(e: PageEvent) {
     this.pageIndex.set(e.pageIndex);
@@ -226,11 +224,32 @@ export class InventarioPage implements OnInit, OnDestroy {
   // Acciones
   add() {
     const ref = this.dialog.open(EquipoDialog, { width: '640px', data: null, autoFocus: false });
-    ref.afterClosed().subscribe(ok => { if (ok) this.pageIndex.set(0); }); // para ver el nuevo en la primera página
+    ref.afterClosed().pipe(
+      takeUntil(this.$onDestroy)
+    ).subscribe(ok => {
+
+      if (ok) {
+        this.dispositivoService.create(ok).pipe(
+          takeUntil(this.$onDestroy)
+        ).subscribe({
+          next: (res) => {
+            this.snack.open(`Equipo creado (ID: ${res.id})`, 'Ok', { duration: 2500 });
+            // forzo el recargo de la primer pagina para ver el nuevo
+            const pSize = this.pageSize();
+            this.pageSize.set(pSize + 1);
+            this.pageSize.set(pSize); // para ver el nuevo en la primera página
+            this._reload();
+          },
+          error: () => this.snack.open('No se pudo crear el equipo', 'Ok', { duration: 2500 })
+        });
+      }
+    }); // para ver el nuevo en la primera página
   }
   edit(row: EquipoVM) {
     const ref = this.dialog.open(EquipoDialog, { width: '640px', data: row, autoFocus: false });
-    ref.afterClosed().subscribe(ok => { if (ok) this._reload(); });
+    ref.afterClosed().pipe(
+      takeUntil(this.$onDestroy)
+    ).subscribe(ok => { if (ok) this._reload(); });
   }
   remove(_row: EquipoVM) {
     this.snack.open('Eliminar: pendiente de acordar endpoint', 'Ok', { duration: 2500 });
@@ -238,6 +257,7 @@ export class InventarioPage implements OnInit, OnDestroy {
 
   // Helper para refrescar manteniendo page/pageSize
   private _reload() {
+    console.log('inventario.page.ts: _reload()');
     // tocar una señal usada por el effect para re-dispararlo:
     this.pageIndex.set(this.pageIndex());
   }

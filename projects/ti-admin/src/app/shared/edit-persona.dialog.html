@@ -1,0 +1,53 @@
+<!-- projects/ti-admin/src/app/shared/edit-persona.dialog.html -->
+<h3 class="p-4 pb-0 mat-title-medium">
+  {{ data && data.persona ? 'Editar persona' : 'Agregar persona' }}
+</h3>
+
+<div class="grid gap-3 p-4 pt-2">
+  <mat-form-field appearance="fill">
+    <mat-label>Nombre completo</mat-label>
+    <input matInput [formControl]="form.controls['nombre_completo']" placeholder="Ej. María López Pérez">
+  </mat-form-field>
+
+  <mat-form-field appearance="fill">
+    <mat-label>Unidad</mat-label>
+    <input matInput [value]="unidadTerm()" (input)="onUnidadInput($event)" [matAutocomplete]="autoUnidad"
+           placeholder="Escribe para buscar unidad...">
+    <button mat-icon-button matSuffix *ngIf="unidadTerm()" (click)="clearUnidad()" aria-label="Limpiar">
+      <mat-icon>close</mat-icon>
+    </button>
+    <mat-autocomplete #autoUnidad="matAutocomplete" (optionSelected)="chooseUnidad($event.option.value)">
+      <mat-option *ngFor="let u of unidadOpts()" [value]="u">
+        {{u.nombre}} <span *ngIf="u.municipio" class="opacity-70"> · {{u.municipio}}</span>
+      </mat-option>
+    </mat-autocomplete>
+  </mat-form-field>
+
+  <div>
+    <div class="mb-2 font-medium">Correos (opcional)</div>
+    <div class="flex items-center gap-2">
+      <mat-form-field appearance="fill" class="flex-1">
+        <mat-label>Agregar correo</mat-label>
+        <input #emailInput matInput type="email" placeholder="ejemplo@dominio.com"
+               (keyup.enter)="addCorreoFromInput(emailInput)">
+        <button mat-icon-button matSuffix (click)="addCorreoFromInput(emailInput)">
+          <mat-icon>add</mat-icon>
+        </button>
+      </mat-form-field>
+    </div>
+
+    <mat-chip-listbox class="mt-1">
+      <mat-chip-option *ngFor="let c of correosFA.controls; let i = index" removable (removed)="removeCorreo(i)">
+        {{ c.value }}
+        <button matChipRemove mat-icon-button aria-label="Remove">
+          <mat-icon>close</mat-icon>
+        </button>
+      </mat-chip-option>
+    </mat-chip-listbox>
+  </div>
+
+  <div class="flex justify-end gap-2">
+    <button mat-stroked-button type="button" (click)="cancel()">Cancelar</button>
+    <button mat-flat-button color="primary" type="button" (click)="save()" [disabled]="form.invalid">Guardar</button>
+  </div>
+</div>

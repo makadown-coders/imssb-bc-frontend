@@ -1,0 +1,58 @@
+<!-- projects/ti-admin/src/app/pages/personas.page.html -->
+<div class="p-4">
+    <div class="flex items-center gap-2 mb-3">
+        <mat-form-field appearance="fill" class="flex-1">
+            <mat-label>Buscar persona (nombre / unidad / correo)</mat-label>
+            <input #qInput matInput (input)="buscar($event)" ...>
+            <button mat-icon-button matSuffix aria-label="limpiar" (click)="clearSearch(qInput)">
+                <mat-icon>close</mat-icon>
+            </button>
+        </mat-form-field>
+
+        <mat-form-field appearance="fill" class="min-w-[320px]">
+            <mat-label>Unidad</mat-label>
+            <input matInput [value]="unidadTerm()" (input)="onUnidadInput($event)" [matAutocomplete]="autoUnidad"
+                placeholder="Escribe para buscar unidad...">
+            <button mat-icon-button matSuffix *ngIf="unidadTerm()" (click)="clearUnidad()" aria-label="Limpiar">
+                <mat-icon>close</mat-icon>
+            </button>
+            <mat-autocomplete #autoUnidad="matAutocomplete" (optionSelected)="chooseUnidad($event.option.value)">
+                <mat-option *ngFor="let u of unidadOpts()" [value]="u">
+                    {{u.nombre}} <span *ngIf="u.municipio" class="opacity-70"> · {{u.municipio}}</span>
+                </mat-option>
+            </mat-autocomplete>
+        </mat-form-field>
+
+        <span class="flex-1"></span>
+        <button mat-flat-button color="primary" (click)="add()">
+            <mat-icon>person_add</mat-icon>&nbsp;Agregar persona
+        </button>
+    </div>
+
+    <table mat-table [dataSource]="items()" class="inv-table">
+        <ng-container matColumnDef="nombre">
+            <th mat-header-cell *matHeaderCellDef>Nombre</th>
+            <td mat-cell *matCellDef="let r">{{ r.nombre_completo }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="unidad">
+            <th mat-header-cell *matHeaderCellDef>Unidad</th>
+            <td mat-cell *matCellDef="let r">{{ r.unidad_medica || '—' }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="acciones">
+            <th mat-header-cell *matHeaderCellDef class="th-actions">Acciones</th>
+            <td mat-cell *matCellDef="let r" class="td-actions">
+                <button mat-icon-button (click)="edit(r)" matTooltip="Editar"><mat-icon>edit</mat-icon></button>
+                <button mat-icon-button color="warn" (click)="remove(r)"
+                    matTooltip="Eliminar"><mat-icon>delete</mat-icon></button>
+            </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="['nombre','unidad','acciones']"></tr>
+        <tr mat-row *matRowDef="let row; columns: ['nombre','unidad','acciones'];"></tr>
+    </table>
+
+    <mat-paginator [length]="total()" [pageIndex]="pageIndex()" [pageSize]="pageSize()" [pageSizeOptions]="[10,20,50]"
+        (page)="onPage($event)"></mat-paginator>
+</div>

@@ -11,6 +11,7 @@ import { TipoUnidad } from "../models/TipoUnidad";
 import { UnidadMedica } from "../models/UnidadMedica";
 import { RuntimeConfigService } from "./runtime-config.service";
 import { TipoPeriferico } from "../models/TipoPeriferico";
+import { PersonaLite } from "../models/Personalite";
 
 @Injectable({ providedIn: 'root' })
 export class CatalogosService {
@@ -72,7 +73,9 @@ export class CatalogosService {
             map(arr => arr.map(n => ({ value: n, label: n })))
         );
     }
-    personas(opts: { q?: string | null; page?: number; pageSize?: number }) {
+   /* 
+   // este era el método viejo sin filtro por unidad médica
+   personas(opts: { q?: string | null; page?: number; pageSize?: number }) {
         const p = new URLSearchParams();
         if (opts.q?.trim()) p.set('q', opts.q.trim());
         p.set('page', String(opts.page ?? 1));
@@ -80,5 +83,20 @@ export class CatalogosService {
         return this.http.get<{ items: { id: number; nombre_completo: string; unidad_medica?: string }[], page: number, pageSize: number, total: number }>(
             `${this.base}/api/ti/personas?${p.toString()}`
         );
+    }*/
+
+    personas(opts: {
+        q?: string | null;
+        unidad_medica_id?: number | null;
+        page?: number;
+        pageSize?: number;
+    }) {
+        const p = new URLSearchParams();
+        if (opts.q?.trim()) p.set('q', opts.q.trim());
+        if (opts.unidad_medica_id) p.set('unidad_medica_id', String(opts.unidad_medica_id));
+        p.set('page', String(opts.page ?? 1));
+        p.set('pageSize', String(opts.pageSize ?? 20));
+        return this.http.get<Page<PersonaLite>>(`${this.base}/api/ti/personas?${p.toString()}`)
+            .pipe(map(r => ({ ...r, items: r.items ?? [] })));
     }
 }

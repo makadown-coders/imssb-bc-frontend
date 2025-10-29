@@ -5,6 +5,7 @@ import { DispositivoRow } from "../models/DispositivoRow";
 import { RuntimeConfigService } from "./runtime-config.service";
 import { DispositivoDetail, Page } from "../models";
 import { DispositivoRowEx } from "../models/DispositivoRowEx";
+import { DispositivoCreate } from "../models/DispositivoCreate";
 
 @Injectable({ providedIn: 'root' })
 export class DispositivosService {
@@ -35,16 +36,7 @@ export class DispositivosService {
     return this.http.get<DispositivoDetail>(`${this.base}/api/dispositivos/${id}`);
   }
 
-  create(body: {
-    unidad_medica_id: number | null;
-    tipo_dispositivo_id: number;
-    serial?: string | null;
-    marca?: string | null;
-    modelo?: string | null;
-    ip?: string | null;
-    conexion?: string | null;
-    observaciones?: string | null;
-  }) {
+  create(body: DispositivoCreate) {
     return this.http.post<{ id: number }>(`${this.base}/api/dispositivos`, body);
   }
 
