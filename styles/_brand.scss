@@ -160,7 +160,7 @@ $theme-dark: mat.define-theme((color: (theme-type: dark, primary: $primary, tert
         --mat-option-selected-state-label-text-color: var(--text-strong);
         --mat-option-hover-state-layer-color: rgba(0, 0, 0, .05);
         --mat-option-focus-state-layer-color: rgba(0, 0, 0, .06);
-    
+
         .mat-datepicker-content,
         .mat-mdc-autocomplete-panel,
         .mat-mdc-select-panel {
@@ -1319,5 +1319,19 @@ $theme-dark: mat.define-theme((color: (theme-type: dark, primary: $primary, tert
         background: color-mix(in oklab, var(--mdc-dialog-container-color), transparent 50%);
         backdrop-filter: blur(2px);
         z-index: 3;
+    }
+
+    .correo-chip {
+        --mdc-chip-container-height: 30px;
+        --mdc-chip-container-shape-radius: 16px;
+        border: 1px solid rgba(0, 0, 0, .12);
+    }
+
+    .sticky-actions {
+        position: sticky;
+        bottom: 0;
+        background: var(--mat-sys-surface, #fff);
+        padding-top: 8px;
+        padding-bottom: 4px;
     }
 }

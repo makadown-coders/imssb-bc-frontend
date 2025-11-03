@@ -1,58 +1,137 @@
 <!-- projects/ti-admin/src/app/pages/personas.page.html -->
-<div class="p-4">
-    <div class="flex items-center gap-2 mb-3">
-        <mat-form-field appearance="fill" class="flex-1">
-            <mat-label>Buscar persona (nombre / unidad / correo)</mat-label>
-            <input #qInput matInput (input)="buscar($event)" ...>
-            <button mat-icon-button matSuffix aria-label="limpiar" (click)="clearSearch(qInput)">
+<div class="page" style="padding:16px; display:flex; flex-direction:column; gap:12px;">
+
+    <!-- Header / acciones -->
+    <div class="header" style="display:flex; align-items:center; gap:12px;">
+        <div style="display:flex; align-items:center; gap:8px;">
+            <mat-icon>people</mat-icon>
+            <span class="mat-headline-small">Personas</span>
+        </div>
+        <span style="flex:1;"></span>
+        <button mat-flat-button color="primary" (click)="add()">
+            <mat-icon>person_add</mat-icon>
+            Agregar persona
+        </button>
+    </div>
+
+    <!-- Filtros -->
+    <div class="filters" style="display:grid; grid-template-columns: 1fr 1fr auto; gap:12px; align-items:center;">
+        <!-- Buscar por texto -->
+        <mat-form-field appearance="fill">
+            <mat-label>Buscar (nombre, unidad o correo)</mat-label>
+            <input matInput [value]="q()" (input)="onSearchInput($event)" placeholder="Escribe para buscar…" />
+            <button mat-icon-button matSuffix *ngIf="q()" (click)="clearSearch()" aria-label="Limpiar búsqueda">
                 <mat-icon>close</mat-icon>
             </button>
         </mat-form-field>
 
-        <mat-form-field appearance="fill" class="min-w-[320px]">
-            <mat-label>Unidad</mat-label>
+        <!-- Unidad (autocomplete) -->
+        <mat-form-field appearance="fill">
+            <mat-label>Filtrar por unidad</mat-label>
             <input matInput [value]="unidadTerm()" (input)="onUnidadInput($event)" [matAutocomplete]="autoUnidad"
-                placeholder="Escribe para buscar unidad...">
-            <button mat-icon-button matSuffix *ngIf="unidadTerm()" (click)="clearUnidad()" aria-label="Limpiar">
+                placeholder="Nombre de la unidad…" />
+            <button mat-icon-button matSuffix *ngIf="unidadTerm()" (click)="clearUnidad()" aria-label="Limpiar unidad">
                 <mat-icon>close</mat-icon>
             </button>
             <mat-autocomplete #autoUnidad="matAutocomplete" (optionSelected)="chooseUnidad($event.option.value)">
                 <mat-option *ngFor="let u of unidadOpts()" [value]="u">
-                    {{u.nombre}} <span *ngIf="u.municipio" class="opacity-70"> · {{u.municipio}}</span>
+                    {{ u.nombre }}
+                    <span class="muted" *ngIf="u.municipio"> · {{ u.municipio }}</span>
                 </mat-option>
+                <mat-option *ngIf="!unidadOpts().length && (unidadTerm() || '').trim()">Sin resultados</mat-option>
             </mat-autocomplete>
         </mat-form-field>
 
-        <span class="flex-1"></span>
-        <button mat-flat-button color="primary" (click)="add()">
-            <mat-icon>person_add</mat-icon>&nbsp;Agregar persona
+        <!-- Limpiar filtros -->
+        <button mat-stroked-button (click)="clearSearch(); clearUnidad()" [disabled]="!q() && !unidadTerm()"
+            aria-label="Limpiar filtros">
+            <mat-icon>filter_alt_off</mat-icon>
+            Limpiar
         </button>
     </div>
 
-    <table mat-table [dataSource]="items()" class="inv-table">
-        <ng-container matColumnDef="nombre">
-            <th mat-header-cell *matHeaderCellDef>Nombre</th>
-            <td mat-cell *matCellDef="let r">{{ r.nombre_completo }}</td>
-        </ng-container>
+    <!-- Tabla + vacío -->
+    <ng-container *ngIf="total() > 0; else emptyState">
+        <section class="inv-card mat-elevation-z2">
+            <table mat-table [dataSource]="items()" class="inv-table">
 
-        <ng-container matColumnDef="unidad">
-            <th mat-header-cell *matHeaderCellDef>Unidad</th>
-            <td mat-cell *matCellDef="let r">{{ r.unidad_medica || '—' }}</td>
-        </ng-container>
+                <!-- Col: Nombre -->
+                <ng-container matColumnDef="nombre">
+                    <th mat-header-cell *matHeaderCellDef>Nombre</th>
+                    <td mat-cell *matCellDef="let r">
+                        <div class="mat-body-1" style="font-weight:600;">{{ r.nombre_completo }}</div>
+                    </td>
+                </ng-container>
 
-        <ng-container matColumnDef="acciones">
-            <th mat-header-cell *matHeaderCellDef class="th-actions">Acciones</th>
-            <td mat-cell *matCellDef="let r" class="td-actions">
-                <button mat-icon-button (click)="edit(r)" matTooltip="Editar"><mat-icon>edit</mat-icon></button>
-                <button mat-icon-button color="warn" (click)="remove(r)"
-                    matTooltip="Eliminar"><mat-icon>delete</mat-icon></button>
-            </td>
-        </ng-container>
+                <!-- Col: Unidad -->
+                <ng-container matColumnDef="unidad">
+                    <th mat-header-cell *matHeaderCellDef>Unidad</th>
+                    <td mat-cell *matCellDef="let r">
+                        {{ r.unidad_medica || '—' }}
+                    </td>
+                </ng-container>
 
-        <tr mat-header-row *matHeaderRowDef="['nombre','unidad','acciones']"></tr>
-        <tr mat-row *matRowDef="let row; columns: ['nombre','unidad','acciones'];"></tr>
-    </table>
+                <!-- Col: Email principal -->
+                <ng-container matColumnDef="email">
+                    <th mat-header-cell *matHeaderCellDef>Email</th>
+                    <td mat-cell *matCellDef="let r">
+                        {{ r.email_principal || '—' }}
+                    </td>
+                </ng-container>
 
-    <mat-paginator [length]="total()" [pageIndex]="pageIndex()" [pageSize]="pageSize()" [pageSizeOptions]="[10,20,50]"
-        (page)="onPage($event)"></mat-paginator>
+                <!-- Col: # Correos -->
+                <ng-container matColumnDef="n">
+                    <th mat-header-cell *matHeaderCellDef># correos</th>
+                    <td mat-cell *matCellDef="let r">
+                        {{ r.n_correos ?? 0 }}
+                    </td>
+                </ng-container>
+
+                <!-- Col: Acciones -->
+                <ng-container matColumnDef="acciones">
+                    <th mat-header-cell *matHeaderCellDef class="th-actions" style="text-align:right;">Acciones</th>
+                    <td mat-cell *matCellDef="let r" style="text-align:right; white-space:nowrap;">
+                        <button mat-icon-button (click)="edit(r)" matTooltip="Editar persona"
+                            aria-label="Editar persona">
+                            <mat-icon>edit</mat-icon>
+                        </button>
+                        <button mat-icon-button color="warn" (click)="remove(r)" matTooltip="Eliminar (borrado lógico)"
+                            aria-label="Eliminar persona">
+                            <mat-icon>delete</mat-icon>
+                        </button>
+                    </td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="displayed"></tr>
+                <tr mat-row *matRowDef="let row; columns: displayed;"></tr>
+            </table>
+        </section>
+
+        <!-- Paginador -->
+        <mat-paginator [length]="total()" [pageIndex]="pageIndex()" [pageSize]="pageSize()"
+            [pageSizeOptions]="[10, 20, 50, 100]" (page)="onPage($event)" aria-label="Paginación de personas">
+        </mat-paginator>
+    </ng-container>
+
+    <!-- Estado vacío -->
+    <ng-template #emptyState>
+        <div class="empty"
+            style="display:grid; place-items:center; gap:8px; padding:32px; border:1px dashed rgba(0,0,0,.12); border-radius:12px;">
+            <mat-icon style="font-size:48px; width:48px; height:48px;">person_search</mat-icon>
+            <div class="mat-title-medium">Sin resultados</div>
+            <div class="mat-body-medium" style="text-align:center; opacity:.8;">
+                Ajusta los filtros o agrega una nueva persona.
+            </div>
+            <div style="display:flex; gap:8px; margin-top:8px;">
+                <button mat-stroked-button (click)="clearSearch(); clearUnidad()" [disabled]="!q() && !unidadTerm()">
+                    <mat-icon>filter_alt_off</mat-icon>
+                    Limpiar filtros
+                </button>
+                <button mat-flat-button color="primary" (click)="add()">
+                    <mat-icon>person_add</mat-icon>
+                    Agregar persona
+                </button>
+            </div>
+        </div>
+    </ng-template>
 </div>

@@ -1,7 +1,7 @@
 <!-- projects/ti-admin/src/app/shared/equipo-dialog.html -->
 <div mat-dialog-title class="hdr">
-  <mat-icon class="hdr-icn">add_box</mat-icon>
-  <div class="hdr-title">{{ data.mode === 'edit' ? 'Editar equipo' : 'Agregar equipo' }}</div>
+  <mat-icon>add_box</mat-icon>
+  {{ data.mode === 'edit' ? 'Editar equipo' : 'Agregar equipo' }}
 </div>
 
 <form [formGroup]="form" (ngSubmit)="save()" mat-dialog-content class="content">

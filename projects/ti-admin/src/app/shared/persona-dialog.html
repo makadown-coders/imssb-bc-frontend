@@ -1,0 +1,90 @@
+<!-- projects/ti-admin/src/app/shared/persona-dialog.html -->
+<!-- Título -->
+<div mat-dialog-title class="hdr">
+  <mat-icon>person</mat-icon>
+  {{ data?.mode === 'edit' ? 'Editar persona' : 'Agregar persona' }}
+</div>
+
+<!-- Contenido -->
+<form [formGroup]="form" (ngSubmit)="save()" mat-dialog-content class="content">
+  <!-- Nombre -->
+  <mat-form-field appearance="fill" class="full">
+    <mat-label>Nombre completo</mat-label>
+    <input matInput formControlName="nombre_completo" autocomplete="off" />
+    <mat-error *ngIf="form.get('nombre_completo')?.hasError('required')">
+      El nombre es obligatorio.
+    </mat-error>
+  </mat-form-field>
+
+  <!-- UNIDAD (Autocomplete) -->
+  <mat-form-field appearance="fill" class="full">
+    <mat-label>Unidad</mat-label>
+    <input matInput [value]="unidadTerm()" (input)="onUnidadInput($event)" [matAutocomplete]="autoUnidad"
+      placeholder="Escribe para buscar unidad…" autocomplete="off" aria-label="Buscar unidad" />
+    <button mat-icon-button matSuffix *ngIf="unidadTerm()" (click)="clearUnidad()" tabindex="-1" aria-label="Limpiar">
+      <mat-icon>close</mat-icon>
+    </button>
+
+    <mat-autocomplete #autoUnidad="matAutocomplete" (optionSelected)="chooseUnidad($event.option.value)">
+      <mat-option *ngFor="let u of unidadOpts()" [value]="u">
+        <div class="flex items-center justify-between w-full">
+          <span>{{ u.nombre }}</span>
+          <span *ngIf="u.municipio" class="text-gray-500">&nbsp;· {{ u.municipio }}</span>
+        </div>
+      </mat-option>
+    </mat-autocomplete>
+    <mat-hint *ngIf="!unidadSel()">Selecciona una unidad de la lista.</mat-hint>
+  </mat-form-field>
+
+  <!-- CORREOS -->
+  <div class="full">
+    <div class="flex items-center justify-between mb-1">
+      <div class="mat-body-strong">Correos electrónicos</div>
+      <div class="text-gray-600 mat-caption">
+        {{ (correos()?.length || 0) }} {{ (correos()?.length || 0) === 1 ? 'correo' : 'correos' }}
+      </div>
+    </div>
+
+    <!-- Input para agregar -->
+    <mat-form-field appearance="fill" class="full">
+      <mat-label>Agregar correo</mat-label>
+      <input matInput formControlName="correoInput" (keydown.enter)="$event.preventDefault(); addCorreoFromInput();"
+        autocomplete="off" placeholder="nombre@dominio.com" />
+      <button mat-icon-button matSuffix (click)="addCorreoFromInput()" aria-label="Agregar correo">
+        <mat-icon>add</mat-icon>
+      </button>
+      <mat-hint>El primero se considera “principal”.</mat-hint>
+      <mat-error *ngIf="correoInputError as err">{{ err }}</mat-error>
+    </mat-form-field>
+
+    <!-- Chips -->
+    <mat-chip-set class="flex flex-wrap gap-2">
+      <mat-chip *ngFor="let c of correos(); let i = index" class="correo-chip" [removable]="true"
+        (removed)="removeCorreo(c)" aria-label="Correo {{ c }}">
+        <mat-icon matChipAvatar>{{ i === 0 ? 'star' : 'alternate_email' }}</mat-icon>
+        <span class="mr-1">{{ c }}</span>
+
+        <!-- Quitar -->
+        <button mat-icon-button matChipRemove matTooltip="Quitar correo" aria-label="Quitar correo">
+          <mat-icon>close</mat-icon>
+        </button>
+
+        <!-- Hacer principal -->
+        <button *ngIf="i !== 0" mat-icon-button (click)="makePrimary(c)" matTooltip="Hacer principal"
+          aria-label="Hacer principal">
+          <mat-icon>star</mat-icon>
+        </button>
+      </mat-chip>
+    </mat-chip-set>
+  </div>  
+</form>
+
+  <div mat-dialog-actions align="end">
+    
+      <button mat-stroked-button type="button" (click)="cancel()">Cancelar</button>
+      <button mat-flat-button color="primary" type="button" (click)="save()" [disabled]="form.invalid || saving()">
+        <mat-icon *ngIf="saving()" class="mr-1">hourglass_top</mat-icon>
+        Guardar
+      </button>
+    
+  </div>
