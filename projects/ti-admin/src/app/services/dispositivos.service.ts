@@ -3,7 +3,7 @@ import { Injectable, inject } from "@angular/core";
 import { Observable } from "rxjs";
 import { DispositivoRow } from "../models/DispositivoRow";
 import { RuntimeConfigService } from "./runtime-config.service";
-import { DispositivoDetail, Page } from "../models";
+import { DispositivoDetail, Page, AsignacionBitacoraRow } from "../models";
 import { DispositivoRowEx } from "../models/DispositivoRowEx";
 import { DispositivoCreate } from "../models/DispositivoCreate";
 
@@ -68,5 +68,31 @@ export class DispositivosService {
       `${this.base}/api/dispositivos/${dispositivoId}/perifericos/${perifericoId}`
     );
   }
+
+  listAsignaciones(dispositivoId: number, opts: {
+    from?: string | null;
+    to?: string | null;
+    page?: number;
+    pageSize?: number;
+  } = {}): Observable<Page<AsignacionBitacoraRow>> {
+    let p = new HttpParams()
+      .set('page', String(opts.page ?? 1))
+      .set('pageSize', String(opts.pageSize ?? 10));
+    if (opts.from) p = p.set('from', opts.from);
+    if (opts.to) p = p.set('to', opts.to);
+
+    return this.http.get<Page<AsignacionBitacoraRow>>(
+      `${this.base}/api/dispositivos/${dispositivoId}/asignaciones`,
+      { params: p }
+    );
+  }
+
+  revertAsignacion(dispositivoId: number, asignacionId: number) {
+    return this.http.post<{ ok: boolean; asignacion_id: number }>(
+      `${this.base}/api/dispositivos/${dispositivoId}/asignaciones/${asignacionId}/revert`,
+      {}
+    );
+  }
+
 
 }

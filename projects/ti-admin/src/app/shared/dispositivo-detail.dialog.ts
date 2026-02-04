@@ -1,5 +1,5 @@
 // projects/ti-admin/src/app/shared/dispositivo-detail.dialog.ts
-import { Component, Inject, inject, signal } from '@angular/core';
+import { Component, computed, DestroyRef, effect, Inject, inject, signal } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef, MatDialog } from '@angular/material/dialog';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
@@ -11,7 +11,7 @@ import { MatTableModule } from '@angular/material/table';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 import { DispositivosService } from '../services/dispositivos.service';
-import { EquipoVM, DispositivoDetail } from '../models';
+import { EquipoVM, DispositivoDetail, AsignacionBitacoraRow, Page } from '../models';
 import { estadoView } from './estado.utils';
 
 // ⬇️ importa los sub-dialogs de edición
@@ -23,6 +23,14 @@ import { MatMenuModule } from '@angular/material/menu';
 import { CatalogosService } from '../services/catalogos.service';
 import { ConfirmDialog } from './confirm-dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { FormsModule } from '@angular/forms';
+import { MatNativeDateModule } from '@angular/material/core';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatPaginatorModule } from '@angular/material/paginator';
+import { Subscription } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   standalone: true,
@@ -31,7 +39,9 @@ import { MatSnackBar } from '@angular/material/snack-bar';
     CommonModule,
     MatDialogModule, MatIconModule, MatButtonModule, MatDividerModule,
     MatChipsModule, MatTabsModule, MatTableModule, MatProgressSpinnerModule,
-    MatMenuModule
+    MatMenuModule,
+    MatFormFieldModule, MatInputModule, MatDatepickerModule, MatNativeDateModule, MatPaginatorModule,
+    FormsModule, MatNativeDateModule
   ],
   templateUrl: './dispositivo-detail.dialog.html'
 })
@@ -40,11 +50,26 @@ export class DispositivoDetailDialog {
   private cat = inject(CatalogosService);
   private dialog = inject(MatDialog);
   private _snackBar = inject(MatSnackBar);
+  private destroyRef = inject(DestroyRef);
+
+  private historialSub: Subscription | null = null;
 
   loading = signal(true);
   detail = signal<DispositivoDetail | null>(null);
   estadoView = estadoView;
   tabIndex = signal(0);
+
+  // ===================== HISTORIAL (BITÁCORA) =====================
+  historialFrom = signal<Date | null>(null);
+  historialTo = signal<Date | null>(null);
+  historialPage = signal(1);
+  historialPageSize = signal(10);
+
+  historialLoading = signal(false);
+  historialTotal = signal(0);
+  historialItems = signal<AsignacionBitacoraRow[]>([]);
+
+  private historialActive = computed(() => this.tabIndex() === 3);
 
   changingEstado = false;
   // menú de estados (desde catálogo)
@@ -56,6 +81,38 @@ export class DispositivoDetailDialog {
   ) {
     this.load();
     this.loadEstados();
+    // Carga el historial cuando el tab está activo (y cuando cambian filtros/paginación)
+    effect(() => {
+      if (!this.historialActive()) return;
+
+      const dispositivoId = Number(this.vm.id);
+      const from = this.historialFrom();
+      const to = this.historialTo();
+      const page = this.historialPage();
+      const pageSize = this.historialPageSize();
+
+      // cancelar petición previa si sigue viva
+      this.historialSub?.unsubscribe();
+
+      this.historialLoading.set(true);
+      this.historialSub = this.api.listAsignaciones(dispositivoId, {
+        from: from ? from.toISOString() : null,
+        to: to ? to.toISOString() : null,
+        page,
+        pageSize
+      }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+        next: (r: Page<AsignacionBitacoraRow>) => {
+          this.historialItems.set(r.items ?? []);
+          this.historialTotal.set(r.total ?? 0);
+          this.historialLoading.set(false);
+        },
+        error: _ => {
+          this.historialLoading.set(false);
+          this._snackBar.open('No se pudo cargar el historial.', 'Cerrar', { duration: 3000 });
+        }
+      });
+    });
+
   }
 
   get title() {
@@ -245,6 +302,76 @@ export class DispositivoDetailDialog {
       }
     });
   }
+
+  // ===== Historial =====
+  onHistorialBuscar() {
+    this.historialPage.set(1);
+  }
+
+  onHistorialLimpiar() {
+    this.historialFrom.set(null);
+    this.historialTo.set(null);
+    this.historialPage.set(1);
+  }
+
+  onHistorialPageChange(ev: any) {
+    this.historialPage.set((ev?.pageIndex ?? 0) + 1);
+    this.historialPageSize.set(ev?.pageSize ?? 10);
+  }
+
+  exportHistorialCsv() {
+    const rows = this.historialItems();
+    if (!rows.length) {
+      this._snackBar.open('No hay datos para exportar.', 'OK', { duration: 2500 });
+      return;
+    }
+
+    const header = [
+      'desde','hasta','unidad_medica','persona','lugar_especifico','estado_dispositivo','observaciones','creado_por','asignacion_id'
+    ];
+
+    const esc = (v: any) => {
+      const s = String(v ?? '');
+      return `"${s.replaceAll('"', '""')}"`;
+    };
+
+    const lines = [
+      header.map(esc).join(','),
+      ...rows.map(r => ([
+        r.desde,
+        r.hasta ?? '',
+        r.unidad_medica ?? '',
+        r.persona ?? '',
+        r.lugar_especifico ?? '',
+        r.estado_dispositivo ?? '',
+        r.observaciones ?? '',
+        r.creado_por ?? '',
+        r.id
+      ]).map(esc).join(','))
+    ];
+
+    const blob = new Blob([lines.join('\\n')], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `historial-dispositivo-${Number(this.vm.id)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  revertirAEstePunto(row: AsignacionBitacoraRow) {
+    const dispositivoId = Number(this.vm.id);
+    this.api.revertAsignacion(dispositivoId, row.id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: _ => {
+          this._snackBar.open('Reversión aplicada. Se registró un nuevo movimiento.', 'OK', { duration: 3500 });
+          this.historialPage.set(1);
+        },
+        error: _ => this._snackBar.open('No se pudo revertir.', 'Cerrar', { duration: 3000 })
+      });
+  }
+
 
   // Reutiliza tus helpers si quieres coherencia visual:
   iconForTipo(input: string) {

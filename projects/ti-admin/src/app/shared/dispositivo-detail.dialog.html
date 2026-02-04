@@ -206,6 +206,90 @@
                     </table>
                 </div>
             </mat-tab>
+            <!-- TAB: Historial -->
+            <mat-tab label="Historial">
+                <div class="dd-tab-scroll">
+                    <div class="dd-section-toolbar" style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+                        <mat-form-field appearance="fill" style="min-width:200px;">
+                            <mat-label>Desde</mat-label>
+                            <input matInput [matDatepicker]="dpFrom" [ngModel]="historialFrom()" (ngModelChange)="historialFrom.set($event); onHistorialBuscar()">
+                            <mat-datepicker-toggle matSuffix [for]="dpFrom"></mat-datepicker-toggle>
+                            <mat-datepicker #dpFrom></mat-datepicker>
+                        </mat-form-field>
+
+                        <mat-form-field appearance="fill" style="min-width:200px;">
+                            <mat-label>Hasta</mat-label>
+                            <input matInput [matDatepicker]="dpTo" [ngModel]="historialTo()" (ngModelChange)="historialTo.set($event); onHistorialBuscar()">
+                            <mat-datepicker-toggle matSuffix [for]="dpTo"></mat-datepicker-toggle>
+                            <mat-datepicker #dpTo></mat-datepicker>
+                        </mat-form-field>
+
+                        <span class="dd-spacer"></span>
+
+                        <button mat-stroked-button (click)="onHistorialLimpiar()">
+                            <mat-icon>clear</mat-icon>&nbsp;Limpiar
+                        </button>
+
+                        <button mat-stroked-button color="primary" (click)="exportHistorialCsv()">
+                            <mat-icon>download</mat-icon>&nbsp;Exportar CSV
+                        </button>
+                    </div>
+
+                    <div class="surface-card mat-elevation-z1" style="padding: 8px 12px; margin-bottom: 12px; display:flex; align-items:center; justify-content:space-between;">
+                        <div class="mat-body-small">Total: <strong>{{ historialTotal() }}</strong></div>
+                        <div class="mat-body-small" *ngIf="historialLoading()">Cargando...</div>
+                    </div>
+
+                    <div *ngIf="!historialLoading() && (historialItems()?.length || 0) === 0"
+                         class="mat-body-medium" style="padding: 12px; opacity:.8;">
+                        Sin movimientos en el rango seleccionado.
+                    </div>
+
+                    <div class="dd-table-wrap" *ngIf="(historialItems()?.length || 0) > 0">
+                        <table class="dd-table">
+                            <thead>
+                                <tr>
+                                    <th>Desde</th>
+                                    <th>Hasta</th>
+                                    <th>Unidad</th>
+                                    <th>Persona / Lugar</th>
+                                    <th>Estado</th>
+                                    <th>Obs.</th>
+                                    <th style="width: 1%; white-space:nowrap;">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr *ngFor="let r of historialItems()">
+                                    <td>{{ r.desde | date:'yyyy-MM-dd HH:mm' }}</td>
+                                    <td>{{ r.hasta ? (r.hasta | date:'yyyy-MM-dd HH:mm') : 'Actual' }}</td>
+                                    <td>{{ r.unidad_medica || '—' }}</td>
+                                    <td>
+                                        <div style="font-weight:600;">{{ r.persona || '—' }}</div>
+                                        <div class="mat-body-small" style="opacity:.8;">{{ r.lugar_especifico || '' }}</div>
+                                    </td>
+                                    <td>{{ r.estado_dispositivo || '—' }}</td>
+                                    <td class="mat-body-small" style="max-width:260px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                                        {{ r.observaciones || '' }}
+                                    </td>
+                                    <td style="white-space:nowrap;">
+                                        <button mat-stroked-button color="primary" (click)="revertirAEstePunto(r)">
+                                            Revertir a este punto
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <mat-paginator
+                        [length]="historialTotal()"
+                        [pageIndex]="historialPage() - 1"
+                        [pageSize]="historialPageSize()"
+                        [pageSizeOptions]="[5,10,25,50]"
+                        (page)="onHistorialPageChange($event)">
+                    </mat-paginator>
+                </div>
+            </mat-tab>
         </mat-tab-group>
         <!-- Overlay de carga (no destruye el tab-group) -->
         <div class="dd-loading-ov" *ngIf="loading()">

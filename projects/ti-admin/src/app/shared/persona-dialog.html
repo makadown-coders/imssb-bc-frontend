@@ -2,7 +2,7 @@
 <!-- Título -->
 <div mat-dialog-title class="hdr">
   <mat-icon>person</mat-icon>
-  {{ data?.mode === 'edit' ? 'Editar persona' : 'Agregar persona' }}
+  {{ data.mode === 'edit' ? 'Editar persona' : 'Agregar persona' }}
 </div>
 
 <!-- Contenido -->
@@ -41,7 +41,7 @@
     <div class="flex items-center justify-between mb-1">
       <div class="mat-body-strong">Correos electrónicos</div>
       <div class="text-gray-600 mat-caption">
-        {{ (correos()?.length || 0) }} {{ (correos()?.length || 0) === 1 ? 'correo' : 'correos' }}
+        {{ (correos().length || 0) }} {{ (correos().length || 0) === 1 ? 'correo' : 'correos' }}
       </div>
     </div>
 

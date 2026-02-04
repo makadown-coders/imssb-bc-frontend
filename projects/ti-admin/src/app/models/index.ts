@@ -17,3 +17,5 @@ export * from './Monitor';
 export * from './Periferico';
 export * from './EstadoView';
 export * from './Personalite';
+export * from './DispositivoCreate';
+export * from './AsignacionBitacoraRow';
